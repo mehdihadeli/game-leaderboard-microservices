@@ -1,28 +1,41 @@
 using LeaderBoard.Dtos;
+using LeaderBoard.Models;
 
 namespace LeaderBoard.Services;
 
 public interface IPlayerScoreService
 {
-    Task<bool> AddOrUpdateScore(string leaderBoardName, string playerId, double value);
-
-    /// <summary>
-    /// Get details information about saved sortedset player score
-    /// </summary>
-    /// <param name="playerId"></param>
-    /// <returns></returns>
-    Task<PlayerScoreDetailDto> GetPlayerScoreDetail(string playerId);
-
-    Task<List<PlayerScoreDto>> GetScoresAndRanks(
-        string leaderBoardName,
-        int start,
-        int ent,
-        bool isDesc = true
+    Task<bool> AddPlayerScore(
+        PlayerScore playerScore,
+        CancellationToken cancellationToken = default
     );
 
-    Task<PlayerScoreDto> GetScoreAndRank(
+    Task<bool> UpdateScore(
         string leaderBoardName,
         string playerId,
-        bool isDesc = true
+        double value,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<List<PlayerScoreDto>?> GetRangeScoresAndRanks(
+        string leaderBoardName,
+        int start,
+        int end,
+        bool isDesc = true,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<List<PlayerScoreDto>?> GetPlayerGroupScoresAndRanks(
+        string leaderBoardName,
+        IEnumerable<string> playerIds,
+        bool isDesc = true,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<PlayerScoreDto?> GetGlobalScoreAndRank(
+        string leaderBoardName,
+        string playerId,
+        bool isDesc = true,
+        CancellationToken cancellationToken = default
     );
 }

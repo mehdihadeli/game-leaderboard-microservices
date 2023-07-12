@@ -1,4 +1,5 @@
-﻿using LeaderBoard.Models;
+﻿using Humanizer;
+using LeaderBoard.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -8,10 +9,12 @@ namespace LeaderBoard.Infrastructure.Data.EFContext.EntityConfigurations
     {
         public void Configure(EntityTypeBuilder<PlayerScore> builder)
         {
-            builder.ToTable("player_score");
+            builder.ToTable(nameof(PlayerScore).Underscore());
 
             builder.HasKey(x => x.PlayerId);
             builder.Property(x => x.PlayerId).HasMaxLength(25);
+
+            builder.Property(x => x.LeaderBoardName).HasMaxLength(50).IsRequired(true);
 
             builder.Property(x => x.FirstName).HasMaxLength(50).IsRequired(false);
 

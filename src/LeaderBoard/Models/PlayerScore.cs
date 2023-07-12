@@ -6,6 +6,7 @@ public class PlayerScore : IAuditable
 {
     public required string PlayerId { get; set; }
     public required double Score { get; set; }
+    public required string LeaderBoardName { get; set; }
     public long? Rank { get; set; }
     public string? Country { get; set; }
     public string? FirstName { get; set; }
