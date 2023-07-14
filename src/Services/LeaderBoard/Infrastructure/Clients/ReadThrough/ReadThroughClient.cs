@@ -33,7 +33,7 @@ public class ReadThroughClient : IReadThroughClient
     {
         // https://github.com/App-vNext/Polly#handing-return-values-and-policytresult
         var httpResponse = await _httpClient.GetAsync(
-            $"{_readThroughHttpClientOptions.PlayersScoreEndpoint}?leaderBoardName={leaderBoardName}&start={start}&end={end}&isDesc={isDesc}",
+            $"{_readThroughHttpClientOptions.PlayersScoreEndpoint}/range?leaderBoardName={leaderBoardName}&start={start}&end={end}&isDesc={isDesc}",
             cancellationToken
         );
 

@@ -1,31 +1,49 @@
 using Humanizer;
 using LeaderBoard.SharedKernel.Application.Messages.PlayerScore;
 using LeaderBoard.SharedKernel.Application.Models;
-using LeaderBoard.WriteBehind.Providers;
+using LeaderBoard.WriteBehind.DatabaseProviders;
+using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 
-namespace LeaderBoard.WriteBehind;
+namespace LeaderBoard.WriteBehind.WriteBehindStrategies.RedisStream;
 
-public class RedisStreamWriteBehind : IRedisStreamWriteBehind
+public class RedisStreamWriteBehind : IWriteBehind
 {
     private readonly IConnectionMultiplexer _redisConnection;
     private readonly IEnumerable<IWriteBehindDatabaseProvider> _writeBehindDatabaseProviders;
+    private readonly ILogger<RedisStreamWriteBehind> _logger;
+    private readonly WriteBehindOptions _options;
     private readonly IDatabase _redisDatabase;
 
     public RedisStreamWriteBehind(
         IConnectionMultiplexer redisConnection,
-        IEnumerable<IWriteBehindDatabaseProvider> writeBehindDatabaseProviders
+        IEnumerable<IWriteBehindDatabaseProvider> writeBehindDatabaseProviders,
+        IOptions<WriteBehindOptions> options,
+        ILogger<RedisStreamWriteBehind> logger
     )
     {
         _redisConnection = redisConnection;
         _writeBehindDatabaseProviders = writeBehindDatabaseProviders;
+        _logger = logger;
+        _options = options.Value;
         _redisDatabase = redisConnection.GetDatabase();
     }
 
     public async Task Execute(CancellationToken cancellationToken)
     {
-        await HandlePlayerScoreAdded(cancellationToken);
-        await HandlePlayerScoreUpdated(cancellationToken);
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                await HandlePlayerScoreAdded(cancellationToken);
+                await HandlePlayerScoreUpdated(cancellationToken);
+                await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("Error in RedisStreamWriteBehind execution: {Message}", e.Message);
+            }
+        }
     }
 
     private async Task HandlePlayerScoreUpdated(CancellationToken cancellationToken)
@@ -35,6 +53,13 @@ public class RedisStreamWriteBehind : IRedisStreamWriteBehind
 
         foreach (var streamKey in streamKeys)
         {
+            if (!_options.UseRedisStreamWriteBehind)
+            {
+                _logger.LogInformation("Message dropped from redis stream");
+                _redisDatabase.KeyExpire(streamKey, TimeSpan.FromSeconds(1));
+                return;
+            }
+
             //Get the last entry
             StreamEntry[] results = _redisDatabase.StreamRange(
                 streamKey,
@@ -66,7 +91,7 @@ public class RedisStreamWriteBehind : IRedisStreamWriteBehind
                 );
 
                 // remove stream-key from redis after persist on primary database
-                _redisDatabase.KeyExpire(streamKey, TimeSpan.FromSeconds(5));
+                _redisDatabase.KeyExpire(streamKey, TimeSpan.FromSeconds(2));
             }
         }
     }
@@ -78,6 +103,13 @@ public class RedisStreamWriteBehind : IRedisStreamWriteBehind
 
         foreach (var streamKey in streamKeys)
         {
+            if (!_options.UseRedisStreamWriteBehind)
+            {
+                _logger.LogInformation("Message dropped from redis stream");
+                _redisDatabase.KeyExpire(streamKey, TimeSpan.FromSeconds(1));
+                return;
+            }
+
             //Get the last entry
             StreamEntry[] results = _redisDatabase.StreamRange(
                 streamKey,
@@ -124,7 +156,7 @@ public class RedisStreamWriteBehind : IRedisStreamWriteBehind
                 );
 
                 // remove stream-key from redis after persist on primary database
-                _redisDatabase.KeyExpire(streamKey, TimeSpan.FromSeconds(5));
+                _redisDatabase.KeyExpire(streamKey, TimeSpan.FromSeconds(2));
             }
         }
     }

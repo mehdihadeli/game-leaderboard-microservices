@@ -7,8 +7,11 @@ using LeaderBoard.SharedKernel.Data;
 using LeaderBoard.SharedKernel.Redis;
 using LeaderBoard.SharedKernel.Web.ProblemDetail;
 using LeaderBoard.WriteBehind;
-using LeaderBoard.WriteBehind.Consumers;
-using LeaderBoard.WriteBehind.Providers;
+using LeaderBoard.WriteBehind.DatabaseProviders;
+using LeaderBoard.WriteBehind.WriteBehindStrategies;
+using LeaderBoard.WriteBehind.WriteBehindStrategies.Broker.Consumers;
+using LeaderBoard.WriteBehind.WriteBehindStrategies.RedisPubSub;
+using LeaderBoard.WriteBehind.WriteBehindStrategies.RedisStream;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -47,27 +50,29 @@ try
         migrationAssembly: typeof(MigrationRootMetadata).Assembly
     );
 
-    builder.Services.AddScoped<IRedisStreamWriteBehind, RedisStreamWriteBehind>();
+    // Register Write Behind Strategies
+    builder.Services.AddScoped<IWriteBehind, RedisStreamWriteBehind>();
+    builder.Services.AddScoped<IWriteBehind, RedisPubSubWriteBehind>();
+
+    // Register Database Provider
     builder.Services.AddScoped<IWriteBehindDatabaseProvider, PostgresWriteBehindDatabaseProvider>();
 
     builder.Services.AddHostedService<WriteBehindWorker>();
 
     var options = builder.Configuration.BindOptions<WriteBehindOptions>();
-    if (options.UseBrokerWriteBehind)
+
+    builder.Services.AddMassTransit(x =>
     {
-        builder.Services.AddMassTransit(x =>
-        {
-            x.SetKebabCaseEndpointNameFormatter();
-            x.AddConsumer<PlayerScoreUpdatedConsumer>();
-            x.AddConsumer<PlayerScoreAddedConsumer>();
-            x.UsingRabbitMq(
-                (context, cfg) =>
-                {
-                    cfg.ConfigureEndpoints(context);
-                }
-            );
-        });
-    }
+        x.SetKebabCaseEndpointNameFormatter();
+        x.AddConsumer<PlayerScoreUpdatedConsumer>();
+        x.AddConsumer<PlayerScoreAddedConsumer>();
+        x.UsingRabbitMq(
+            (context, cfg) =>
+            {
+                cfg.ConfigureEndpoints(context);
+            }
+        );
+    });
 
     var app = builder.Build();
 

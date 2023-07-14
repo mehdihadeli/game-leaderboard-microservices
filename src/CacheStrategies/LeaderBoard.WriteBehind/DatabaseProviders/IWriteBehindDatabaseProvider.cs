@@ -1,6 +1,6 @@
 using LeaderBoard.SharedKernel.Application.Models;
 
-namespace LeaderBoard.WriteBehind.Providers;
+namespace LeaderBoard.WriteBehind.DatabaseProviders;
 
 public interface IWriteBehindDatabaseProvider
 {

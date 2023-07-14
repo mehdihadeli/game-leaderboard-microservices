@@ -54,7 +54,7 @@ public class WriteThroughClient : IWriteThroughClient
     )
     {
         // https://github.com/App-vNext/Polly#handing-return-values-and-policytresult
-        var httpResponse = await _httpClient.PostAsJsonAsync(
+        var httpResponse = await _httpClient.PutAsJsonAsync(
             $"{_options.PlayersScoreEndpoint}/players/{playerId}",
             new UpdateScoreClientDto(score, leaderBoardName),
             cancellationToken

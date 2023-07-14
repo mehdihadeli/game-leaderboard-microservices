@@ -22,4 +22,8 @@
     <ProjectReference Include="..\..\Shared\LeaderBoard.SharedKernel\LeaderBoard.SharedKernel.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="WriteBehindStrategies\Broker\" />
+  </ItemGroup>
+
 </Project>

@@ -18,9 +18,7 @@ public static class DatabaseExtensions
             }
         );
 
-        var pubSubMessage = new PubSubMessage { Type = typeof(T).Name, Data = jsonData };
-
-        await database.PublishAsync(channelName, JsonConvert.SerializeObject(pubSubMessage));
+        await database.PublishAsync(channelName, jsonData);
     }
 
     public static async Task PublishMessage<T>(this IDatabase database, T data)
