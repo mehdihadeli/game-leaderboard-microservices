@@ -1,5 +1,5 @@
-using LeaderBoard.WriteThrough.Infrastructure.Data.EFContext;
-using LeaderBoard.WriteThrough.Models;
+using LeaderBoard.SharedKernel.Application.Data.EFContext;
+using LeaderBoard.SharedKernel.Application.Models;
 
 namespace LeaderBoard.WriteThrough.Providers;
 

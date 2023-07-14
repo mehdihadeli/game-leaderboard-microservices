@@ -1,12 +1,13 @@
 using System.Reflection;
 using Humanizer;
+using LeaderBoard.DbMigrator;
+using LeaderBoard.SharedKernel.Application.Data.EFContext;
+using LeaderBoard.SharedKernel.Application.Models;
 using LeaderBoard.SharedKernel.Data;
 using LeaderBoard.SharedKernel.Redis;
 using LeaderBoard.WriteThrough.Endpoints.PlayerScore.AddingPlayerScore;
 using LeaderBoard.WriteThrough.Endpoints.PlayerScore.UpdatingScore;
 using LeaderBoard.WriteThrough.Extensions.WebApplicationBuilderExtensions;
-using LeaderBoard.WriteThrough.Infrastructure.Data.EFContext;
-using LeaderBoard.WriteThrough.Models;
 using LeaderBoard.WriteThrough.Providers;
 using LeaderBoard.WriteThrough.Services;
 using Microsoft.EntityFrameworkCore;
@@ -39,7 +40,9 @@ try
 
     builder.AddCustomRedis();
 
-    builder.AddPostgresDbContext<LeaderBoardDBContext>();
+    builder.AddPostgresDbContext<LeaderBoardDBContext>(
+        migrationAssembly: typeof(MigrationRootMetadata).Assembly
+    );
 
     builder.Services.AddScoped<IWriteThrough, WriteThrough>();
     builder.Services.AddScoped<IWriteProviderDatabase, PostgresWriteProviderDatabase>();
@@ -71,6 +74,12 @@ try
     var scoreGroup = app.MapGroup("global-board/scores").WithTags(nameof(PlayerScore).Pluralize());
     scoreGroup.MapAddPlayerScoreEndpoint();
     scoreGroup.MapUpdateScoreEndpoint();
+
+    using (var scope = app.Services.CreateScope())
+    {
+        var leaderBoardDbContext = scope.ServiceProvider.GetRequiredService<LeaderBoardDBContext>();
+        await leaderBoardDbContext.Database.MigrateAsync();
+    }
 
     app.Run();
 }

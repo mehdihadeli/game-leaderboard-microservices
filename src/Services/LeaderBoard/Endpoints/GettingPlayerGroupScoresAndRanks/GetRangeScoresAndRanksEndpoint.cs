@@ -1,7 +1,7 @@
 using Humanizer;
 using LeaderBoard.Dtos;
-using LeaderBoard.Models;
 using LeaderBoard.Services;
+using LeaderBoard.SharedKernel.Application.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace LeaderBoard.Endpoints.GettingPlayerGroupScoresAndRanks;
@@ -13,7 +13,7 @@ public static class GetPlayerGroupScoresAndRanksEndpoint
     )
     {
         return routeBuilder
-            .MapGet("player-group", Handle)
+            .MapGet("players", Handle)
             .WithTags(nameof(PlayerScore).Pluralize())
             .WithName("GetPlayerGroupScoresAndRanks");
 

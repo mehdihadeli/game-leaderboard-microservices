@@ -1,7 +1,7 @@
 using Humanizer;
 using LeaderBoard.ReadThrough.Dtos;
-using LeaderBoard.ReadThrough.Models;
 using LeaderBoard.ReadThrough.Services;
+using LeaderBoard.SharedKernel.Application.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace LeaderBoard.ReadThrough.Endpoints.GettingRangeScoresAndRanks;

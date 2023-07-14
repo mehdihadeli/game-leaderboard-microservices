@@ -1,5 +1,5 @@
-using LeaderBoard.ReadThrough.Infrastructure.Data.EFContext;
-using LeaderBoard.ReadThrough.Models;
+using LeaderBoard.SharedKernel.Application.Data.EFContext;
+using LeaderBoard.SharedKernel.Application.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace LeaderBoard.ReadThrough.Providers;

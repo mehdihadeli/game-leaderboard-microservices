@@ -1,4 +1,4 @@
-namespace LeaderBoard.MessageContracts.PlayerScore;
+namespace LeaderBoard.SharedKernel.Application.Messages.PlayerScore;
 
 public record PlayerScoreUpdated(
     string PlayerId,

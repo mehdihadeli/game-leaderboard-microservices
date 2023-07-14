@@ -1,4 +1,6 @@
 using System.Reflection;
+using LeaderBoard.DbMigrator;
+using LeaderBoard.SharedKernel.Application.Data.EFContext;
 using LeaderBoard.SharedKernel.Core.Extensions;
 using LeaderBoard.SharedKernel.Core.Extensions.ServiceCollectionExtensions;
 using LeaderBoard.SharedKernel.Data;
@@ -6,7 +8,6 @@ using LeaderBoard.SharedKernel.Redis;
 using LeaderBoard.SharedKernel.Web.ProblemDetail;
 using LeaderBoard.WriteBehind;
 using LeaderBoard.WriteBehind.Consumers;
-using LeaderBoard.WriteBehind.Infrastructure.Data.EFContext;
 using LeaderBoard.WriteBehind.Providers;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
@@ -42,7 +43,9 @@ try
 
     builder.AddCustomRedis();
 
-    builder.AddPostgresDbContext<LeaderBoardDBContext>();
+    builder.AddPostgresDbContext<LeaderBoardDBContext>(
+        migrationAssembly: typeof(MigrationRootMetadata).Assembly
+    );
 
     builder.Services.AddScoped<IRedisStreamWriteBehind, RedisStreamWriteBehind>();
     builder.Services.AddScoped<IWriteBehindDatabaseProvider, PostgresWriteBehindDatabaseProvider>();
@@ -86,6 +89,12 @@ try
     {
         app.UseSwagger();
         app.UseSwaggerUI();
+    }
+
+    using (var scope = app.Services.CreateScope())
+    {
+        var leaderBoardDbContext = scope.ServiceProvider.GetRequiredService<LeaderBoardDBContext>();
+        await leaderBoardDbContext.Database.MigrateAsync();
     }
 
     app.Run();

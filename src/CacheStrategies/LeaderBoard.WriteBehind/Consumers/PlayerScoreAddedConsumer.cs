@@ -1,5 +1,5 @@
-using LeaderBoard.MessageContracts.PlayerScore;
-using LeaderBoard.WriteBehind.Models;
+using LeaderBoard.SharedKernel.Application.Messages.PlayerScore;
+using LeaderBoard.SharedKernel.Application.Models;
 using LeaderBoard.WriteBehind.Providers;
 using MassTransit;
 

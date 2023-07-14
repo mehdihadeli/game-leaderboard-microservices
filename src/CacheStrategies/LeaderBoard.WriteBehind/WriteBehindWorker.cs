@@ -1,6 +1,6 @@
-using LeaderBoard.MessageContracts.PlayerScore;
+using LeaderBoard.SharedKernel.Application.Messages.PlayerScore;
+using LeaderBoard.SharedKernel.Application.Models;
 using LeaderBoard.SharedKernel.Redis;
-using LeaderBoard.WriteBehind.Models;
 using LeaderBoard.WriteBehind.Providers;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;

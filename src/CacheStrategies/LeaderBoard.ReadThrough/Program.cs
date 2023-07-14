@@ -1,17 +1,19 @@
 using System.Reflection;
 using Humanizer;
+using LeaderBoard.DbMigrator;
+using LeaderBoard.ReadThrough.Data;
 using LeaderBoard.ReadThrough.Endpoints.GettingRangeScoresAndRanks;
 using LeaderBoard.ReadThrough.Extensions.WebApplicationBuilderExtensions;
-using LeaderBoard.ReadThrough.Infrastructure.Data;
-using LeaderBoard.ReadThrough.Infrastructure.Data.EFContext;
-using LeaderBoard.ReadThrough.Models;
 using LeaderBoard.ReadThrough.Providers;
 using LeaderBoard.ReadThrough.Services;
+using LeaderBoard.SharedKernel.Application.Data.EFContext;
+using LeaderBoard.SharedKernel.Application.Models;
 using LeaderBoard.SharedKernel.Core.Extensions.ServiceCollectionExtensions;
 using LeaderBoard.SharedKernel.Data;
 using LeaderBoard.SharedKernel.Data.Contracts;
 using LeaderBoard.SharedKernel.Redis;
 using LeaderBoard.WriteBehind;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Events;
 
@@ -44,7 +46,9 @@ try
 
     builder.AddCustomRedis();
 
-    builder.AddPostgresDbContext<LeaderBoardDBContext>();
+    builder.AddPostgresDbContext<LeaderBoardDBContext>(
+        migrationAssembly: typeof(MigrationRootMetadata).Assembly
+    );
     builder.Services.AddTransient<ISeeder, DataSeeder>();
 
     builder.Services.AddScoped<IReadThrough, ReadThrough>();
@@ -81,6 +85,9 @@ try
 
     using (var scope = app.Services.CreateScope())
     {
+        var leaderBoardDbContext = scope.ServiceProvider.GetRequiredService<LeaderBoardDBContext>();
+        await leaderBoardDbContext.Database.MigrateAsync();
+
         var seeders = scope.ServiceProvider.GetServices<ISeeder>();
         foreach (var seeder in seeders)
             await seeder.SeedAsync();

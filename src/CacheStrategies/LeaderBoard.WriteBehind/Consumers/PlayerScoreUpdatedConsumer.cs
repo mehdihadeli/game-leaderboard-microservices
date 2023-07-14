@@ -1,4 +1,4 @@
-using LeaderBoard.MessageContracts.PlayerScore;
+using LeaderBoard.SharedKernel.Application.Messages.PlayerScore;
 using LeaderBoard.WriteBehind.Providers;
 using MassTransit;
 

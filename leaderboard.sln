@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeaderBoard.WriteBehind", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeaderBoard.WriteThrough", "src\CacheStrategies\LeaderBoard.WriteThrough\LeaderBoard.WriteThrough.csproj", "{B31ACBE4-71E1-44DF-992F-646E6D95EB47}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeaderBoard.DbMigrator", "src\Shared\LeaderBoard.DbMigrator\LeaderBoard.DbMigrator.csproj", "{C09A6C81-1C1D-4885-8C22-B3BC1602B8A1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,6 +50,10 @@ Global
 		{B31ACBE4-71E1-44DF-992F-646E6D95EB47}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B31ACBE4-71E1-44DF-992F-646E6D95EB47}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B31ACBE4-71E1-44DF-992F-646E6D95EB47}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C09A6C81-1C1D-4885-8C22-B3BC1602B8A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C09A6C81-1C1D-4885-8C22-B3BC1602B8A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C09A6C81-1C1D-4885-8C22-B3BC1602B8A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C09A6C81-1C1D-4885-8C22-B3BC1602B8A1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{9A8253B0-54F0-419E-8DAD-9037874F3B49} = {8618DF56-1042-4EA8-AF93-A69C3E7D3412}
@@ -55,5 +61,6 @@ Global
 		{1B3B9818-5625-4CB3-B5C2-4728117761B8} = {EA4CE47E-F59D-42CF-BCB7-C4689A8456F6}
 		{E0A2E9AF-F1CB-4A3A-A66F-323F8A020CAC} = {EA4CE47E-F59D-42CF-BCB7-C4689A8456F6}
 		{B31ACBE4-71E1-44DF-992F-646E6D95EB47} = {EA4CE47E-F59D-42CF-BCB7-C4689A8456F6}
+		{C09A6C81-1C1D-4885-8C22-B3BC1602B8A1} = {A04527F6-1C2B-4EA6-8FA1-C46B3860839F}
 	EndGlobalSection
 EndGlobal

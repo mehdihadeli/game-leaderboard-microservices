@@ -1,5 +1,4 @@
 using LeaderBoard.Dtos;
-using LeaderBoard.Models;
 
 namespace LeaderBoard.Services;
 
@@ -11,6 +10,20 @@ public interface IPlayerScoreService
     );
 
     Task<bool> UpdateScore(
+        string leaderBoardName,
+        string playerId,
+        double value,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<bool> IncrementScore(
+        string leaderBoardName,
+        string playerId,
+        double value,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<bool> DecrementScore(
         string leaderBoardName,
         string playerId,
         double value,

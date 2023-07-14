@@ -1,4 +1,4 @@
-using LeaderBoard.WriteBehind.Models;
+using LeaderBoard.SharedKernel.Application.Models;
 
 namespace LeaderBoard.WriteBehind.Providers;
 

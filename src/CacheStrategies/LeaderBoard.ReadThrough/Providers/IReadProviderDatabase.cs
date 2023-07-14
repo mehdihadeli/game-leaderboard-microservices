@@ -1,4 +1,4 @@
-using LeaderBoard.ReadThrough.Models;
+using LeaderBoard.SharedKernel.Application.Models;
 
 namespace LeaderBoard.ReadThrough.Providers;
 

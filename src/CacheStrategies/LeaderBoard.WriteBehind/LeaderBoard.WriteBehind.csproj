@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Shared\LeaderBoard.DbMigrator\LeaderBoard.DbMigrator.csproj" />
     <ProjectReference Include="..\..\Shared\LeaderBoard.SharedKernel\LeaderBoard.SharedKernel.csproj" />
   </ItemGroup>
 

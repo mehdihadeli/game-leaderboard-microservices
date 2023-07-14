@@ -1,9 +1,8 @@
 using System.Globalization;
 using AutoBogus;
-using EFCore.BulkExtensions;
 using Humanizer;
-using LeaderBoard.Infrastructure.Data.EFContext;
-using LeaderBoard.Models;
+using LeaderBoard.SharedKernel.Application.Data.EFContext;
+using LeaderBoard.SharedKernel.Application.Models;
 using LeaderBoard.SharedKernel.Data.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;

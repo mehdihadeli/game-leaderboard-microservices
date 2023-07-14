@@ -1,8 +1,8 @@
 using System.Globalization;
 using Humanizer;
 using LeaderBoard.ReadThrough.Dtos;
-using LeaderBoard.ReadThrough.Models;
 using LeaderBoard.ReadThrough.Providers;
+using LeaderBoard.SharedKernel.Application.Models;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 
@@ -122,7 +122,7 @@ public class ReadThrough : IReadThrough
         CancellationToken cancellationToken = default
     )
     {
-        string key = $"{nameof(PlayerScore)}:{playerId}";
+        string key = $"{nameof(PlayerScore).Underscore()}:{playerId}";
 
         // 1. Read data form the cache
         var score = await _redisDatabase.SortedSetScoreAsync(leaderBoardName, playerId);

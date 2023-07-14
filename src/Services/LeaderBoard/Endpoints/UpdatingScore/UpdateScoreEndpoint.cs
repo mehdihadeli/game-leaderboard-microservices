@@ -1,6 +1,6 @@
 using Humanizer;
-using LeaderBoard.Models;
 using LeaderBoard.Services;
+using LeaderBoard.SharedKernel.Application.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 

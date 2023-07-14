@@ -45,6 +45,7 @@
   </ItemGroup>
   
   <ItemGroup>
+    <Folder Include="Application\Data\" />
     <Folder Include="Application\Messages\" />
   </ItemGroup>
 

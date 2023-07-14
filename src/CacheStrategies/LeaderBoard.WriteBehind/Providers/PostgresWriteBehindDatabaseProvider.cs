@@ -1,6 +1,6 @@
 using AutoMapper;
-using LeaderBoard.WriteBehind.Infrastructure.Data.EFContext;
-using LeaderBoard.WriteBehind.Models;
+using LeaderBoard.SharedKernel.Application.Data.EFContext;
+using LeaderBoard.SharedKernel.Application.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace LeaderBoard.WriteBehind.Providers;

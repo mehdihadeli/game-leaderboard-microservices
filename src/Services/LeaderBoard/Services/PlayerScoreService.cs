@@ -4,9 +4,10 @@ using AutoMapper;
 using Humanizer;
 using LeaderBoard.Dtos;
 using LeaderBoard.Infrastructure.Clients;
-using LeaderBoard.Infrastructure.Data.EFContext;
-using LeaderBoard.MessageContracts.PlayerScore;
-using LeaderBoard.Models;
+using LeaderBoard.Infrastructure.Clients.WriteThrough;
+using LeaderBoard.SharedKernel.Application.Data.EFContext;
+using LeaderBoard.SharedKernel.Application.Messages.PlayerScore;
+using LeaderBoard.SharedKernel.Application.Models;
 using LeaderBoard.SharedKernel.Redis;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +25,7 @@ public class PlayerScoreService : IPlayerScoreService
     private readonly IMapper _mapper;
     private readonly LeaderBoardDBContext _leaderBoardDbContext;
     private readonly IReadThroughClient _readThroughClient;
+    private readonly IWriteThroughClient _writeThroughClient;
     private readonly IPublishEndpoint _publishEndpoint;
     private readonly LeaderBoardOptions _leaderboardOptions;
     private readonly IDatabase _redisDatabase;
@@ -33,6 +35,7 @@ public class PlayerScoreService : IPlayerScoreService
         IConnectionMultiplexer redisConnection,
         LeaderBoardDBContext leaderBoardDbContext,
         IReadThroughClient readThroughClient,
+        IWriteThroughClient writeThroughClient,
         IPublishEndpoint publishEndpoint,
         IOptions<LeaderBoardOptions> leaderboardOptions
     )
@@ -40,6 +43,7 @@ public class PlayerScoreService : IPlayerScoreService
         _mapper = mapper;
         _leaderBoardDbContext = leaderBoardDbContext;
         _readThroughClient = readThroughClient;
+        _writeThroughClient = writeThroughClient;
         _publishEndpoint = publishEndpoint;
         _leaderboardOptions = leaderboardOptions.Value;
         _redisDatabase = redisConnection.GetDatabase();
@@ -54,6 +58,12 @@ public class PlayerScoreService : IPlayerScoreService
 
         var playerScore = _mapper.Map<PlayerScore>(playerScoreDto);
 
+        if (_leaderboardOptions.UseWriteThrough)
+        {
+            await _writeThroughClient.AddPlayerScore(playerScoreDto, cancellationToken);
+            return true;
+        }
+
         var key = $"{nameof(PlayerScore).Underscore()}:{playerScore.PlayerId}";
         bool isDesc = true;
 
@@ -66,7 +76,11 @@ public class PlayerScoreService : IPlayerScoreService
         if (res == false)
             return false;
 
-        var rank = await _redisDatabase.SortedSetRankAsync(playerScore.LeaderBoardName, key);
+        var rank = await _redisDatabase.SortedSetRankAsync(
+            playerScore.LeaderBoardName,
+            key,
+            isDesc ? Order.Descending : Order.Ascending
+        );
         rank = isDesc ? rank + 1 : rank - 1;
 
         // recalculated rank by redis sortedset after adding new item
@@ -139,22 +153,35 @@ public class PlayerScoreService : IPlayerScoreService
         return true;
     }
 
-    public async Task<bool> UpdateScore(
+    public async Task<bool> IncrementScore(
         string leaderBoardName,
         string playerId,
         double value,
         CancellationToken cancellationToken = default
     )
     {
-        string key = $"{nameof(PlayerScore)}:{playerId}";
+        if (_leaderboardOptions.UseWriteThrough)
+        {
+            await _writeThroughClient.IncrementScore(
+                leaderBoardName,
+                playerId,
+                value,
+                cancellationToken
+            );
+            return true;
+        }
+
+        string key = $"{nameof(PlayerScore).Underscore()}:{playerId}";
         bool isDesc = true;
 
-        var res = await _redisDatabase.SortedSetAddAsync(leaderBoardName, key, value);
-        if (res == false)
-            return false;
+        var newValue = await _redisDatabase.SortedSetIncrementAsync(leaderBoardName, key, value);
 
         var score = await _redisDatabase.SortedSetScoreAsync(leaderBoardName, key);
-        var rank = await _redisDatabase.SortedSetRankAsync(leaderBoardName, key);
+        var rank = await _redisDatabase.SortedSetRankAsync(
+            leaderBoardName,
+            key,
+            isDesc ? Order.Descending : Order.Ascending
+        );
         rank = isDesc ? rank + 1 : rank - 1;
 
         if (_leaderboardOptions.UseWriteCacheAside)
@@ -172,6 +199,170 @@ public class PlayerScoreService : IPlayerScoreService
         }
         else if (_leaderboardOptions.UseWriteBehind)
         {
+            HashEntry[] hashEntries =
+            {
+                new(nameof(PlayerScore.PlayerId).Underscore(), playerId),
+                new(nameof(PlayerScore.LeaderBoardName).Underscore(), leaderBoardName),
+                new(nameof(PlayerScore.Score).Underscore(), score ?? 0),
+                new(nameof(PlayerScore.Rank).Underscore(), rank),
+            };
+            var playerScoreUpdated = new PlayerScoreUpdated(
+                playerId,
+                score ?? 0,
+                leaderBoardName,
+                rank
+            );
+            // write behind strategy - will handle by caching provider(like redis gears) internally or out external library or azure function or background services
+            // redis pub/sub message
+            // uses a CommandChannelValueMessage message internally on top of redis stream
+            await _redisDatabase.PublishMessage(playerScoreUpdated);
+
+            // publish a stream to redis (both PublishMessage and StreamAddAsync use same streaming mechanism behind the scenes)
+            // uses a CommandKeyValuesMessage message internally on top of redis stream
+            await _redisDatabase.StreamAddAsync(
+                GetStreamName<PlayerScoreUpdated>(playerId), //_player_score_updated-stream-{key}
+                hashEntries.Select(x => new NameValueEntry(x.Name, x.Value)).ToArray()
+            );
+
+            // Or publish message to broker
+            await _publishEndpoint.Publish(playerScoreUpdated, cancellationToken);
+        }
+
+        return true;
+    }
+
+    public async Task<bool> DecrementScore(
+        string leaderBoardName,
+        string playerId,
+        double value,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (_leaderboardOptions.UseWriteThrough)
+        {
+            await _writeThroughClient.DecrementScore(
+                leaderBoardName,
+                playerId,
+                value,
+                cancellationToken
+            );
+            return true;
+        }
+
+        string key = $"{nameof(PlayerScore).Underscore()}:{playerId}";
+        bool isDesc = true;
+
+        var newValue = await _redisDatabase.SortedSetDecrementAsync(leaderBoardName, key, value);
+
+        var score = await _redisDatabase.SortedSetScoreAsync(leaderBoardName, key);
+        var rank = await _redisDatabase.SortedSetRankAsync(
+            leaderBoardName,
+            key,
+            isDesc ? Order.Descending : Order.Ascending
+        );
+        rank = isDesc ? rank + 1 : rank - 1;
+
+        if (_leaderboardOptions.UseWriteCacheAside)
+        {
+            // we have to write to cache first for calculating redis rank correctly for our update
+            var existPlayerScore = _leaderBoardDbContext.PlayerScores.SingleOrDefault(
+                x => x.PlayerId == playerId && x.LeaderBoardName == leaderBoardName
+            );
+            if (existPlayerScore is { })
+            {
+                existPlayerScore.Rank = rank;
+                existPlayerScore.Score = score ?? 0;
+                await _leaderBoardDbContext.SaveChangesAsync(cancellationToken);
+            }
+        }
+        else if (_leaderboardOptions.UseWriteBehind)
+        {
+            HashEntry[] hashEntries =
+            {
+                new(nameof(PlayerScore.PlayerId).Underscore(), playerId),
+                new(nameof(PlayerScore.LeaderBoardName).Underscore(), leaderBoardName),
+                new(nameof(PlayerScore.Score).Underscore(), score ?? 0),
+                new(nameof(PlayerScore.Rank).Underscore(), rank),
+            };
+            var playerScoreUpdated = new PlayerScoreUpdated(
+                playerId,
+                score ?? 0,
+                leaderBoardName,
+                rank
+            );
+            // write behind strategy - will handle by caching provider(like redis gears) internally or out external library or azure function or background services
+            // redis pub/sub message
+            // uses a CommandChannelValueMessage message internally on top of redis stream
+            await _redisDatabase.PublishMessage(playerScoreUpdated);
+
+            // publish a stream to redis (both PublishMessage and StreamAddAsync use same streaming mechanism behind the scenes)
+            // uses a CommandKeyValuesMessage message internally on top of redis stream
+            await _redisDatabase.StreamAddAsync(
+                GetStreamName<PlayerScoreUpdated>(playerId), //_player_score_updated-stream-{key}
+                hashEntries.Select(x => new NameValueEntry(x.Name, x.Value)).ToArray()
+            );
+
+            // Or publish message to broker
+            await _publishEndpoint.Publish(playerScoreUpdated, cancellationToken);
+        }
+
+        return true;
+    }
+
+    public async Task<bool> UpdateScore(
+        string leaderBoardName,
+        string playerId,
+        double value,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (_leaderboardOptions.UseWriteThrough)
+        {
+            await _writeThroughClient.UpdateScore(
+                playerId,
+                value,
+                leaderBoardName,
+                cancellationToken
+            );
+            return true;
+        }
+
+        string key = $"{nameof(PlayerScore).Underscore()}:{playerId}";
+        bool isDesc = true;
+
+        // 1. update cache
+        var res = await _redisDatabase.SortedSetUpdateAsync(leaderBoardName, key, value);
+        if (res == false)
+            return false;
+
+        var score = await _redisDatabase.SortedSetScoreAsync(leaderBoardName, key);
+        var rank = await _redisDatabase.SortedSetRankAsync(
+            leaderBoardName,
+            key,
+            isDesc ? Order.Descending : Order.Ascending
+        );
+        rank = isDesc ? rank + 1 : rank - 1;
+
+        // consider a write strategy for updating primary database
+        if (_leaderboardOptions.UseWriteCacheAside)
+        {
+            // 2. update primary database, synchronously
+
+            // we have to write to cache first for calculating redis rank correctly for our update
+            var existPlayerScore = _leaderBoardDbContext.PlayerScores.SingleOrDefault(
+                x => x.PlayerId == playerId && x.LeaderBoardName == leaderBoardName
+            );
+            if (existPlayerScore is { })
+            {
+                existPlayerScore.Rank = rank;
+                existPlayerScore.Score = score ?? 0;
+                await _leaderBoardDbContext.SaveChangesAsync(cancellationToken);
+            }
+        }
+        else if (_leaderboardOptions.UseWriteThrough) { }
+        else if (_leaderboardOptions.UseWriteBehind)
+        {
+            // 2. update primary database, asynchronously
             HashEntry[] hashEntries =
             {
                 new(nameof(PlayerScore.PlayerId).Underscore(), playerId),
@@ -369,7 +560,7 @@ public class PlayerScoreService : IPlayerScoreService
             );
         }
 
-        string key = $"{nameof(PlayerScore)}:{playerId}";
+        string key = $"{nameof(PlayerScore).Underscore()}:{playerId}";
 
         var score = await _redisDatabase.SortedSetScoreAsync(leaderBoardName, playerId);
         var rank = await _redisDatabase.SortedSetRankAsync(

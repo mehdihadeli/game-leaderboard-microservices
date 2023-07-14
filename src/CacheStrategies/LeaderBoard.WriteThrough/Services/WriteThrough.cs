@@ -2,9 +2,8 @@ using System.Globalization;
 using Ardalis.GuardClauses;
 using AutoMapper;
 using Humanizer;
+using LeaderBoard.SharedKernel.Application.Models;
 using LeaderBoard.WriteThrough.Dtos;
-using LeaderBoard.WriteThrough.Infrastructure.Data.EFContext;
-using LeaderBoard.WriteThrough.Models;
 using LeaderBoard.WriteThrough.Providers;
 using StackExchange.Redis;
 
@@ -17,19 +16,16 @@ public class WriteThrough : IWriteThrough
 {
     private readonly IMapper _mapper;
     private readonly IWriteProviderDatabase _writeProviderDatabase;
-    private readonly LeaderBoardDBContext _leaderBoardDbContext;
     private readonly IDatabase _redisDatabase;
 
     public WriteThrough(
         IMapper mapper,
         IConnectionMultiplexer redisConnection,
-        IWriteProviderDatabase writeProviderDatabase,
-        LeaderBoardDBContext leaderBoardDbContext
+        IWriteProviderDatabase writeProviderDatabase
     )
     {
         _mapper = mapper;
         _writeProviderDatabase = writeProviderDatabase;
-        _leaderBoardDbContext = leaderBoardDbContext;
         _redisDatabase = redisConnection.GetDatabase();
     }
 
@@ -55,7 +51,11 @@ public class WriteThrough : IWriteThrough
         if (res == false)
             return false;
 
-        var rank = await _redisDatabase.SortedSetRankAsync(playerScore.LeaderBoardName, key);
+        var rank = await _redisDatabase.SortedSetRankAsync(
+            playerScore.LeaderBoardName,
+            key,
+            isDesc ? Order.Descending : Order.Ascending
+        );
         rank = isDesc ? rank + 1 : rank - 1;
 
         // recalculated rank by redis sortedset after adding new item
@@ -93,16 +93,20 @@ public class WriteThrough : IWriteThrough
         CancellationToken cancellationToken = default
     )
     {
-        string key = $"{nameof(PlayerScore)}:{playerId}";
+        string key = $"{nameof(PlayerScore).Underscore()}:{playerId}";
         bool isDesc = true;
 
         // 1. Write data to cache
-        var res = await _redisDatabase.SortedSetAddAsync(leaderBoardName, key, value);
+        var res = await _redisDatabase.SortedSetUpdateAsync(leaderBoardName, key, value);
         if (res == false)
             return false;
 
         var score = await _redisDatabase.SortedSetScoreAsync(leaderBoardName, key);
-        var rank = await _redisDatabase.SortedSetRankAsync(leaderBoardName, key);
+        var rank = await _redisDatabase.SortedSetRankAsync(
+            leaderBoardName,
+            key,
+            isDesc ? Order.Descending : Order.Ascending
+        );
         rank = isDesc ? rank + 1 : rank - 1;
 
         // 2. Write data to primary database
