@@ -6,11 +6,11 @@ namespace LeaderBoard.WriteBehind.DatabaseProviders;
 
 public class PostgresWriteBehindDatabaseProvider : IWriteBehindDatabaseProvider
 {
-    private readonly LeaderBoardDBContext _leaderBoardDbContext;
+    private readonly LeaderBoardDbContext _leaderBoardDbContext;
     private readonly ILogger<PostgresWriteBehindDatabaseProvider> _logger;
 
     public PostgresWriteBehindDatabaseProvider(
-        LeaderBoardDBContext leaderBoardDbContext,
+        LeaderBoardDbContext leaderBoardDbContext,
         ILogger<PostgresWriteBehindDatabaseProvider> logger
     )
     {

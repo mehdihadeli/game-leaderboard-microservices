@@ -12,13 +12,23 @@ using LeaderBoard.Infrastructure.Data;
 using LeaderBoard.Services;
 using LeaderBoard.SharedKernel.Application.Data.EFContext;
 using LeaderBoard.SharedKernel.Application.Models;
+using LeaderBoard.SharedKernel.Bus;
 using LeaderBoard.SharedKernel.Data;
 using LeaderBoard.SharedKernel.Data.Contracts;
+using LeaderBoard.SharedKernel.Data.Postgres;
 using LeaderBoard.SharedKernel.Redis;
 using LeaderBoard.Workers.WriteBehind;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using Serilog.Events;
+
+// https://github.com/serilog/serilog-aspnetcore#two-stage-initialization
+Log.Logger = new LoggerConfiguration().MinimumLevel
+    .Override("Microsoft", LogEventLevel.Information)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
 
 try
 {
@@ -46,7 +56,18 @@ try
         }
     );
 
-    builder.Host.UseSerilog();
+    builder.Host.UseSerilog(
+        (context, services, configuration) =>
+        {
+            //https://github.com/serilog/serilog-aspnetcore#two-stage-initialization
+            configuration.ReadFrom
+                .Configuration(context.Configuration)
+                .ReadFrom.Services(services)
+                .Enrich.FromLogContext()
+                .WriteTo.Console();
+        }
+    );
+
     builder.AddAppProblemDetails();
 
     // Add services to the container.
@@ -66,7 +87,10 @@ try
 
     builder.AddCustomRedis();
 
-    builder.AddPostgresDbContext<LeaderBoardDBContext>(
+    builder.AddPostgresDbContext<LeaderBoardDbContext>(
+        migrationAssembly: typeof(MigrationRootMetadata).Assembly
+    );
+    builder.AddPostgresDbContext<InboxOutboxDbContext>(
         migrationAssembly: typeof(MigrationRootMetadata).Assembly
     );
 
@@ -77,6 +101,14 @@ try
 
     builder.Services.AddMassTransit(x =>
     {
+        // setup masstransit for outbox and producing messages through `IPublishEndpoint`
+        x.AddEntityFrameworkOutbox<InboxOutboxDbContext>(o =>
+        {
+            o.QueryDelay = TimeSpan.FromSeconds(1);
+            o.UsePostgres();
+            o.UseBusOutbox();
+        });
+
         x.UsingRabbitMq(
             (_, cfg) =>
             {
@@ -84,6 +116,7 @@ try
             }
         );
     });
+    builder.Services.AddScoped<IBusPublisher, BusPublisher>();
 
     // setup workers
     builder.Services.AddHostedService<ProduceEventsWorker>();
@@ -119,8 +152,11 @@ try
 
     using (var scope = app.Services.CreateScope())
     {
-        var leaderBoardDbContext = scope.ServiceProvider.GetRequiredService<LeaderBoardDBContext>();
+        var leaderBoardDbContext = scope.ServiceProvider.GetRequiredService<LeaderBoardDbContext>();
         await leaderBoardDbContext.Database.MigrateAsync();
+
+        var inboxOutboxDbContext = scope.ServiceProvider.GetRequiredService<InboxOutboxDbContext>();
+        await inboxOutboxDbContext.Database.MigrateAsync();
 
         var seeders = scope.ServiceProvider.GetServices<ISeeder>();
         foreach (var seeder in seeders)

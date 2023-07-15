@@ -6,9 +6,9 @@ namespace LeaderBoard.ReadThrough.Providers;
 
 public class PostgresReadProviderDatabase : IReadProviderDatabase
 {
-    private readonly LeaderBoardDBContext _leaderBoardDbContext;
+    private readonly LeaderBoardDbContext _leaderBoardDbContext;
 
-    public PostgresReadProviderDatabase(LeaderBoardDBContext leaderBoardDbContext)
+    public PostgresReadProviderDatabase(LeaderBoardDbContext leaderBoardDbContext)
     {
         _leaderBoardDbContext = leaderBoardDbContext;
     }

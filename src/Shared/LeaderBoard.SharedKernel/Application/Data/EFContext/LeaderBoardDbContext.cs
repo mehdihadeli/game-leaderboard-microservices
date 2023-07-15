@@ -5,12 +5,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LeaderBoard.SharedKernel.Application.Data.EFContext;
 
-public class LeaderBoardDBContext : DbContext
+public class LeaderBoardDbContext : DbContext
 {
-    public DbSet<PlayerScore> PlayerScores { get; set; } = default!;
-
-    public LeaderBoardDBContext(DbContextOptions<LeaderBoardDBContext> options)
+    public LeaderBoardDbContext(DbContextOptions<LeaderBoardDbContext> options)
         : base(options) { }
+
+    public DbSet<PlayerScore> PlayerScores { get; set; } = default!;
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
@@ -32,5 +32,6 @@ public class LeaderBoardDBContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new PlayerScoreEntityTypeConfiguration());
+        base.OnModelCreating(modelBuilder);
     }
 }

@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 
-namespace LeaderBoard.SharedKernel.Data;
+namespace LeaderBoard.SharedKernel.Data.Postgres;
 
 public abstract class DbContextDesignFactoryBase<TDbContext>
     : IDesignTimeDbContextFactory<TDbContext>

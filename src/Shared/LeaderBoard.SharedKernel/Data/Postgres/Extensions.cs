@@ -1,19 +1,17 @@
 using System.Reflection;
-using LeaderBoard.SharedKernel.Core.Extensions;
 using LeaderBoard.SharedKernel.Core.Extensions.ServiceCollectionExtensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace LeaderBoard.SharedKernel.Data;
+namespace LeaderBoard.SharedKernel.Data.Postgres;
 
 public static class Extensions
 {
     public static WebApplicationBuilder AddPostgresDbContext<TDbContext>(
         this WebApplicationBuilder builder,
         Assembly? migrationAssembly = null,
-        Action<DbContextOptionsBuilder>? contextBuilder = null,
-        params Assembly[] assembliesToScan
+        Action<DbContextOptionsBuilder>? contextBuilder = null
     )
         where TDbContext : DbContext
     {
@@ -46,7 +44,6 @@ public static class Extensions
                 contextBuilder?.Invoke(options);
             }
         );
-
         return builder;
     }
 }

@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace LeaderBoard.DbMigrator.Migrations
+namespace LeaderBoard.DbMigrator.Migrations.LeaderBoard
 {
     /// <inheritdoc />
     public partial class InitialLeaderboardMigration : Migration

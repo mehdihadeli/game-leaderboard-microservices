@@ -9,10 +9,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace LeaderBoard.DbMigrator.Migrations
+namespace LeaderBoard.DbMigrator.Migrations.LeaderBoard
 {
-    [DbContext(typeof(LeaderBoardDBContext))]
-    [Migration("20230714105917_InitialLeaderboardMigration")]
+    [DbContext(typeof(LeaderBoardDbContext))]
+    [Migration("20230715124607_InitialLeaderboardMigration")]
     partial class InitialLeaderboardMigration
     {
         /// <inheritdoc />

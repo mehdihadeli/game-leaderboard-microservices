@@ -8,8 +8,8 @@ using LeaderBoard.Infrastructure.Clients.WriteThrough;
 using LeaderBoard.SharedKernel.Application.Data.EFContext;
 using LeaderBoard.SharedKernel.Application.Messages.PlayerScore;
 using LeaderBoard.SharedKernel.Application.Models;
+using LeaderBoard.SharedKernel.Bus;
 using LeaderBoard.SharedKernel.Redis;
-using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
@@ -23,20 +23,20 @@ namespace LeaderBoard.Services;
 public class PlayerScoreService : IPlayerScoreService
 {
     private readonly IMapper _mapper;
-    private readonly LeaderBoardDBContext _leaderBoardDbContext;
+    private readonly LeaderBoardDbContext _leaderBoardDbContext;
     private readonly IReadThroughClient _readThroughClient;
     private readonly IWriteThroughClient _writeThroughClient;
-    private readonly IPublishEndpoint _publishEndpoint;
+    private readonly IBusPublisher _busPublisher;
     private readonly LeaderBoardOptions _leaderboardOptions;
     private readonly IDatabase _redisDatabase;
 
     public PlayerScoreService(
         IMapper mapper,
         IConnectionMultiplexer redisConnection,
-        LeaderBoardDBContext leaderBoardDbContext,
+        LeaderBoardDbContext leaderBoardDbContext,
         IReadThroughClient readThroughClient,
         IWriteThroughClient writeThroughClient,
-        IPublishEndpoint publishEndpoint,
+        IBusPublisher busPublisher,
         IOptions<LeaderBoardOptions> leaderboardOptions
     )
     {
@@ -44,7 +44,7 @@ public class PlayerScoreService : IPlayerScoreService
         _leaderBoardDbContext = leaderBoardDbContext;
         _readThroughClient = readThroughClient;
         _writeThroughClient = writeThroughClient;
-        _publishEndpoint = publishEndpoint;
+        _busPublisher = busPublisher;
         _leaderboardOptions = leaderboardOptions.Value;
         _redisDatabase = redisConnection.GetDatabase();
     }
@@ -147,7 +147,7 @@ public class PlayerScoreService : IPlayerScoreService
             );
 
             // Or publish message to broker
-            await _publishEndpoint.Publish(playerScoreAdded, cancellationToken);
+            await _busPublisher.Publish(playerScoreAdded, cancellationToken);
         }
 
         return true;
@@ -232,7 +232,7 @@ public class PlayerScoreService : IPlayerScoreService
             );
 
             // Or publish message to broker
-            await _publishEndpoint.Publish(playerScoreUpdated, cancellationToken);
+            await _busPublisher.Publish(playerScoreUpdated, cancellationToken);
         }
 
         return true;
@@ -310,7 +310,7 @@ public class PlayerScoreService : IPlayerScoreService
             );
 
             // Or publish message to broker
-            await _publishEndpoint.Publish(playerScoreUpdated, cancellationToken);
+            await _busPublisher.Publish(playerScoreUpdated, cancellationToken);
         }
 
         return true;
@@ -388,7 +388,7 @@ public class PlayerScoreService : IPlayerScoreService
             );
 
             // Or publish message to broker
-            await _publishEndpoint.Publish(playerScoreUpdated, cancellationToken);
+            await _busPublisher.Publish(playerScoreUpdated, cancellationToken);
         }
 
         return true;

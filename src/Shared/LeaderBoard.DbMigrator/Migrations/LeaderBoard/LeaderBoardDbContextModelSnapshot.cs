@@ -8,10 +8,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace LeaderBoard.DbMigrator.Migrations
+namespace LeaderBoard.DbMigrator.Migrations.LeaderBoard
 {
-    [DbContext(typeof(LeaderBoardDBContext))]
-    partial class LeaderBoardDBContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(LeaderBoardDbContext))]
+    partial class LeaderBoardDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {

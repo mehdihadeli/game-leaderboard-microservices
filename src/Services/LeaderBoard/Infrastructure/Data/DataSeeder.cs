@@ -13,13 +13,13 @@ namespace LeaderBoard.Infrastructure.Data;
 public class DataSeeder : ISeeder
 {
     private readonly IConnectionMultiplexer _redisConnection;
-    private readonly LeaderBoardDBContext _leaderBoardDbContext;
+    private readonly LeaderBoardDbContext _leaderBoardDbContext;
     private readonly LeaderBoardOptions _leaderBoardOptions;
     private readonly IDatabase _redisDatabase;
 
     public DataSeeder(
         IConnectionMultiplexer redisConnection,
-        LeaderBoardDBContext leaderBoardDbContext,
+        LeaderBoardDbContext leaderBoardDbContext,
         IOptions<LeaderBoardOptions> leaderBoardOptions
     )
     {

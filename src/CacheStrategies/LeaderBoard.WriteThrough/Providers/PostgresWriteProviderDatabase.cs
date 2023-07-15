@@ -5,9 +5,9 @@ namespace LeaderBoard.WriteThrough.Providers;
 
 public class PostgresWriteProviderDatabase : IWriteProviderDatabase
 {
-    private readonly LeaderBoardDBContext _leaderBoardDbContext;
+    private readonly LeaderBoardDbContext _leaderBoardDbContext;
 
-    public PostgresWriteProviderDatabase(LeaderBoardDBContext leaderBoardDbContext)
+    public PostgresWriteProviderDatabase(LeaderBoardDbContext leaderBoardDbContext)
     {
         _leaderBoardDbContext = leaderBoardDbContext;
     }
