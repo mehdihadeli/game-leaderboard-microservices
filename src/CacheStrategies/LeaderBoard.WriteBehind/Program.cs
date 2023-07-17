@@ -2,19 +2,27 @@ using System.Reflection;
 using LeaderBoard.DbMigrator;
 using LeaderBoard.SharedKernel.Application.Data.EFContext;
 using LeaderBoard.SharedKernel.Bus;
+using LeaderBoard.SharedKernel.Contracts.Domain.Events;
+using LeaderBoard.SharedKernel.Core.Exceptions;
 using LeaderBoard.SharedKernel.Core.Extensions;
 using LeaderBoard.SharedKernel.Core.Extensions.ServiceCollectionExtensions;
-using LeaderBoard.SharedKernel.Data.Postgres;
+using LeaderBoard.SharedKernel.Domain.Events;
+using LeaderBoard.SharedKernel.EventStoreDB.Extensions;
+using LeaderBoard.SharedKernel.OpenTelemetry;
+using LeaderBoard.SharedKernel.Postgres;
 using LeaderBoard.SharedKernel.Redis;
 using LeaderBoard.SharedKernel.Web.ProblemDetail;
 using LeaderBoard.WriteBehind;
 using LeaderBoard.WriteBehind.DatabaseProviders;
-using LeaderBoard.WriteBehind.WriteBehindStrategies;
-using LeaderBoard.WriteBehind.WriteBehindStrategies.Broker.Consumers;
-using LeaderBoard.WriteBehind.WriteBehindStrategies.RedisPubSub;
-using LeaderBoard.WriteBehind.WriteBehindStrategies.RedisStream;
+using LeaderBoard.WriteBehind.Services.WriteBehindStrategies;
+using LeaderBoard.WriteBehind.Services.WriteBehindStrategies.Broker.Consumers;
+using LeaderBoard.WriteBehind.Services.WriteBehindStrategies.RedisPubSub;
+using LeaderBoard.WriteBehind.Services.WriteBehindStrategies.RedisStream;
 using MassTransit;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Polly;
 using Serilog;
 using Serilog.Events;
 
@@ -68,10 +76,24 @@ try
     builder.Services.AddValidatedOptions<WriteBehindOptions>();
 
     builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+    builder.Services.AddMediatR(
+        c => c.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly())
+    );
+
+    var policy = Policy.Handle<Exception>().RetryAsync(2);
+    builder.Services.AddSingleton(ActivityScope.Instance);
+    AddInternalEventBus(builder.Services, policy);
+
+    builder.Services.AddEventStoreDB(policy, Assembly.GetExecutingAssembly());
+
+    builder.Services.AddTransient<
+        IAggregatesDomainEventsRequestStore,
+        AggregatesDomainEventsStore
+    >();
 
     builder.AddCustomRedis();
 
-    builder.AddPostgresDbContext<LeaderBoardDbContext>(
+    builder.AddPostgresDbContext<LeaderBoardReadDbContext>(
         migrationAssembly: typeof(MigrationRootMetadata).Assembly
     );
     builder.AddPostgresDbContext<InboxOutboxDbContext>(
@@ -83,7 +105,10 @@ try
     builder.Services.AddScoped<IWriteBehind, RedisPubSubWriteBehind>();
 
     // Register Database Provider
-    builder.Services.AddScoped<IWriteBehindDatabaseProvider, PostgresWriteBehindDatabaseProvider>();
+    builder.Services.AddScoped<
+        IWriteBehindDatabaseProvider,
+        EventStoreDbWriteBehindDatabaseProvider
+    >();
 
     builder.Services.AddHostedService<WriteBehindWorker>();
 
@@ -99,12 +124,24 @@ try
         });
 
         x.SetKebabCaseEndpointNameFormatter();
-        x.AddConsumer<PlayerScoreUpdatedConsumer>();
-        x.AddConsumer<PlayerScoreAddedConsumer>();
+        x.AddConsumer<PlayerScoreAddOrUpdatedConsumer>();
         x.UsingRabbitMq(
             (context, cfg) =>
             {
                 cfg.ConfigureEndpoints(context);
+
+                // https://masstransit-project.com/usage/exceptions.html#retry
+                // https://markgossa.com/2022/06/masstransit-exponential-back-off.html
+                cfg.UseMessageRetry(r =>
+                {
+                    r.Exponential(
+                            3,
+                            TimeSpan.FromMilliseconds(200),
+                            TimeSpan.FromMinutes(120),
+                            TimeSpan.FromMilliseconds(200)
+                        )
+                        .Ignore<ValidationException>(); // don't retry if we have invalid data and message goes to _error queue masstransit
+                });
             }
         );
     });
@@ -125,7 +162,7 @@ try
 
     using (var scope = app.Services.CreateScope())
     {
-        var leaderBoardDbContext = scope.ServiceProvider.GetRequiredService<LeaderBoardDbContext>();
+        var leaderBoardDbContext = scope.ServiceProvider.GetRequiredService<LeaderBoardReadDbContext>();
         await leaderBoardDbContext.Database.MigrateAsync();
 
         var inboxOutboxDbContext = scope.ServiceProvider.GetRequiredService<InboxOutboxDbContext>();
@@ -141,4 +178,21 @@ catch (Exception ex)
 finally
 {
     Log.CloseAndFlush();
+}
+
+static IServiceCollection AddInternalEventBus(
+    IServiceCollection services,
+    AsyncPolicy? asyncPolicy = null
+)
+{
+    services.AddSingleton(
+        sp =>
+            new InternalEventBus(
+                sp.GetRequiredService<IMediator>(),
+                asyncPolicy ?? Policy.NoOpAsync()
+            )
+    );
+    services.TryAddSingleton<IInternalEventBus>(sp => sp.GetRequiredService<InternalEventBus>());
+
+    return services;
 }

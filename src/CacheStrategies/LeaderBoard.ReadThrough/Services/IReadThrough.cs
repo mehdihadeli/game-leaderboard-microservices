@@ -1,4 +1,4 @@
-using LeaderBoard.ReadThrough.Dtos;
+using LeaderBoard.ReadThrough.PlayerScores.Dtos;
 
 namespace LeaderBoard.ReadThrough.Services;
 

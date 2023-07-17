@@ -1,16 +1,8 @@
-using LeaderBoard.SharedKernel.Application.Models;
+using LeaderBoard.WriteBehind.Dtos;
 
 namespace LeaderBoard.WriteBehind.DatabaseProviders;
 
 public interface IWriteBehindDatabaseProvider
 {
-    Task UpdatePlayerScore(
-        string leaderBoardName,
-        string playerId,
-        double score,
-        long? rank,
-        CancellationToken cancellationToken
-    );
-
-    Task AddPlayerScore(PlayerScore playerScore, CancellationToken cancellationToken);
+    Task AddOrUpdatePlayerScore(PlayerScoreDto playerScoreDto, CancellationToken cancellationToken);
 }

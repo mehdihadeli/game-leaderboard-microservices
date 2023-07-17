@@ -3,15 +3,20 @@ using Humanizer;
 using LeaderBoard.DbMigrator;
 using LeaderBoard.SharedKernel.Application.Data.EFContext;
 using LeaderBoard.SharedKernel.Application.Models;
-using LeaderBoard.SharedKernel.Data;
-using LeaderBoard.SharedKernel.Data.Postgres;
+using LeaderBoard.SharedKernel.Contracts.Domain.Events;
+using LeaderBoard.SharedKernel.Domain.Events;
+using LeaderBoard.SharedKernel.EventStoreDB.Extensions;
+using LeaderBoard.SharedKernel.OpenTelemetry;
+using LeaderBoard.SharedKernel.Postgres;
 using LeaderBoard.SharedKernel.Redis;
-using LeaderBoard.WriteThrough.Endpoints.PlayerScore.AddingPlayerScore;
-using LeaderBoard.WriteThrough.Endpoints.PlayerScore.UpdatingScore;
-using LeaderBoard.WriteThrough.Extensions.WebApplicationBuilderExtensions;
-using LeaderBoard.WriteThrough.Providers;
-using LeaderBoard.WriteThrough.Services;
+using LeaderBoard.WriteThrough.PlayerScore.Features.AddingOrUpdatingPlayerScore;
+using LeaderBoard.WriteThrough.Shared.Extensions.WebApplicationBuilderExtensions;
+using LeaderBoard.WriteThrough.Shared.Providers;
+using LeaderBoard.WriteThrough.Shared.Services;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Polly;
 using Serilog;
 using Serilog.Events;
 
@@ -68,15 +73,29 @@ try
     builder.Services.AddSwaggerGen();
 
     builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+    builder.Services.AddMediatR(
+        c => c.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly())
+    );
+
+    var policy = Policy.Handle<Exception>().RetryAsync(2);
+    builder.Services.AddSingleton(ActivityScope.Instance);
+    AddInternalEventBus(builder.Services, policy);
+
+    builder.Services.AddEventStoreDB(policy, Assembly.GetExecutingAssembly());
+
+    builder.Services.AddTransient<
+        IAggregatesDomainEventsRequestStore,
+        AggregatesDomainEventsStore
+    >();
 
     builder.AddCustomRedis();
 
-    builder.AddPostgresDbContext<LeaderBoardDbContext>(
+    builder.AddPostgresDbContext<LeaderBoardReadDbContext>(
         migrationAssembly: typeof(MigrationRootMetadata).Assembly
     );
 
     builder.Services.AddScoped<IWriteThrough, WriteThrough>();
-    builder.Services.AddScoped<IWriteProviderDatabase, PostgresWriteProviderDatabase>();
+    builder.Services.AddScoped<IWriteProviderDatabase, EventStoreWriteProviderDatabase>();
 
     var app = builder.Build();
 
@@ -102,13 +121,14 @@ try
 
     app.UseHttpsRedirection();
 
-    var scoreGroup = app.MapGroup("global-board/scores").WithTags(nameof(PlayerScore).Pluralize());
-    scoreGroup.MapAddPlayerScoreEndpoint();
-    scoreGroup.MapUpdateScoreEndpoint();
+    var scoreGroup = app.MapGroup("global-board/scores")
+        .WithTags(nameof(PlayerScoreReadModel).Pluralize());
+    scoreGroup.MapAddOrUpdatePlayerScoreEndpoint();
 
     using (var scope = app.Services.CreateScope())
     {
-        var leaderBoardDbContext = scope.ServiceProvider.GetRequiredService<LeaderBoardDbContext>();
+        var leaderBoardDbContext =
+            scope.ServiceProvider.GetRequiredService<LeaderBoardReadDbContext>();
         await leaderBoardDbContext.Database.MigrateAsync();
     }
 
@@ -121,4 +141,21 @@ catch (Exception ex)
 finally
 {
     Log.CloseAndFlush();
+}
+
+static IServiceCollection AddInternalEventBus(
+    IServiceCollection services,
+    AsyncPolicy? asyncPolicy = null
+)
+{
+    services.AddSingleton(
+        sp =>
+            new InternalEventBus(
+                sp.GetRequiredService<IMediator>(),
+                asyncPolicy ?? Policy.NoOpAsync()
+            )
+    );
+    services.TryAddSingleton<IInternalEventBus>(sp => sp.GetRequiredService<InternalEventBus>());
+
+    return services;
 }

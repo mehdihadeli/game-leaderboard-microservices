@@ -1,4 +1,4 @@
-namespace LeaderBoard.WriteBehind;
+namespace LeaderBoard.ReadThrough;
 
 public class ReadThroughOptions
 {

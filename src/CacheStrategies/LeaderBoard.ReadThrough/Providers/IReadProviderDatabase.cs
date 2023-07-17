@@ -4,13 +4,13 @@ namespace LeaderBoard.ReadThrough.Providers;
 
 public interface IReadProviderDatabase
 {
-    IQueryable<PlayerScore> GetScoresAndRanks(
+    IQueryable<PlayerScoreReadModel> GetScoresAndRanks(
         string leaderBoardName,
         bool isDesc = true,
         CancellationToken cancellationToken = default
     );
 
-    Task<PlayerScore?> GetGlobalScoreAndRank(
+    Task<PlayerScoreReadModel?> GetGlobalScoreAndRank(
         string leaderBoardName,
         string playerId,
         bool isDesc = true,

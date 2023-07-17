@@ -21,4 +21,8 @@
     <ProjectReference Include="..\..\Shared\LeaderBoard.SharedKernel\LeaderBoard.SharedKernel.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="PlayerScores\" />
+  </ItemGroup>
+
 </Project>

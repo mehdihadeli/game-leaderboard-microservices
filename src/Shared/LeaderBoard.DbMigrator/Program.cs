@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 Console.WriteLine("Starting database migration...");
 
-var leaderboardContextFactory = new LeaderboardDbContextDesignFactory();
+var leaderboardContextFactory = new LeaderboardReadDbContextDesignFactory();
 var leaderBoardContext = leaderboardContextFactory.CreateDbContext(new string[] { });
 await leaderBoardContext.Database.MigrateAsync();
 

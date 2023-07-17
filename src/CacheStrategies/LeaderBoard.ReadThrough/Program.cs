@@ -1,19 +1,20 @@
 using System.Reflection;
 using Humanizer;
 using LeaderBoard.DbMigrator;
+using LeaderBoard.ReadThrough;
 using LeaderBoard.ReadThrough.Data;
-using LeaderBoard.ReadThrough.Endpoints.GettingRangeScoresAndRanks;
 using LeaderBoard.ReadThrough.Extensions.WebApplicationBuilderExtensions;
+using LeaderBoard.ReadThrough.PlayerScores.Features.GettingGlobalScoreAndRank;
+using LeaderBoard.ReadThrough.PlayerScores.Features.GettingPlayerGroupScoresAndRanks;
+using LeaderBoard.ReadThrough.PlayerScores.Features.GettingRangeScoresAndRanks;
 using LeaderBoard.ReadThrough.Providers;
 using LeaderBoard.ReadThrough.Services;
 using LeaderBoard.SharedKernel.Application.Data.EFContext;
 using LeaderBoard.SharedKernel.Application.Models;
+using LeaderBoard.SharedKernel.Contracts.Data;
 using LeaderBoard.SharedKernel.Core.Extensions.ServiceCollectionExtensions;
-using LeaderBoard.SharedKernel.Data;
-using LeaderBoard.SharedKernel.Data.Contracts;
-using LeaderBoard.SharedKernel.Data.Postgres;
+using LeaderBoard.SharedKernel.Postgres;
 using LeaderBoard.SharedKernel.Redis;
-using LeaderBoard.WriteBehind;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Events;
@@ -76,7 +77,7 @@ try
 
     builder.AddCustomRedis();
 
-    builder.AddPostgresDbContext<LeaderBoardDbContext>(
+    builder.AddPostgresDbContext<LeaderBoardReadDbContext>(
         migrationAssembly: typeof(MigrationRootMetadata).Assembly
     );
     builder.Services.AddTransient<ISeeder, DataSeeder>();
@@ -101,7 +102,7 @@ try
 
     app.UseHttpsRedirection();
 
-    var scoreGroup = app.MapGroup("global-board/scores").WithTags(nameof(PlayerScore).Pluralize());
+    var scoreGroup = app.MapGroup("global-board/scores").WithTags(nameof(PlayerScoreReadModel).Pluralize());
     scoreGroup.MapGetRangeScoresAndRanks();
     scoreGroup.MapGetGlobalScoreAndRank();
     scoreGroup.MapGetPlayerGroupScoresAndRanks();
@@ -115,7 +116,7 @@ try
 
     using (var scope = app.Services.CreateScope())
     {
-        var leaderBoardDbContext = scope.ServiceProvider.GetRequiredService<LeaderBoardDbContext>();
+        var leaderBoardDbContext = scope.ServiceProvider.GetRequiredService<LeaderBoardReadDbContext>();
         await leaderBoardDbContext.Database.MigrateAsync();
 
         var seeders = scope.ServiceProvider.GetServices<ISeeder>();

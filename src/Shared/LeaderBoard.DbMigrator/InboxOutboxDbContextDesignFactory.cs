@@ -1,5 +1,5 @@
 using LeaderBoard.SharedKernel.Application.Data.EFContext;
-using LeaderBoard.SharedKernel.Data.Postgres;
+using LeaderBoard.SharedKernel.Postgres;
 
 namespace LeaderBoard.DbMigrator;
 

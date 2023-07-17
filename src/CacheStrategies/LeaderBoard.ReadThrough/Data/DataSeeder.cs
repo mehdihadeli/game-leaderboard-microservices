@@ -3,8 +3,7 @@ using AutoBogus;
 using Humanizer;
 using LeaderBoard.SharedKernel.Application.Data.EFContext;
 using LeaderBoard.SharedKernel.Application.Models;
-using LeaderBoard.SharedKernel.Data.Contracts;
-using LeaderBoard.WriteBehind;
+using LeaderBoard.SharedKernel.Contracts.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
@@ -14,18 +13,18 @@ namespace LeaderBoard.ReadThrough.Data;
 public class DataSeeder : ISeeder
 {
     private readonly IConnectionMultiplexer _redisConnection;
-    private readonly LeaderBoardDbContext _leaderBoardDbContext;
+    private readonly LeaderBoardReadDbContext _leaderBoardReadDbContext;
     private readonly ReadThroughOptions _readThroughOptions;
     private readonly IDatabase _redisDatabase;
 
     public DataSeeder(
         IConnectionMultiplexer redisConnection,
-        LeaderBoardDbContext leaderBoardDbContext,
+        LeaderBoardReadDbContext leaderBoardReadDbContext,
         IOptions<ReadThroughOptions> readThroughOptions
     )
     {
         _redisConnection = redisConnection;
-        _leaderBoardDbContext = leaderBoardDbContext;
+        _leaderBoardReadDbContext = leaderBoardReadDbContext;
         _readThroughOptions = readThroughOptions.Value;
         _redisDatabase = redisConnection.GetDatabase();
     }
@@ -37,23 +36,22 @@ public class DataSeeder : ISeeder
             await DeleteAllKeys();
         }
 
-        if (!_leaderBoardDbContext.PlayerScores.Any())
+        if (!_leaderBoardReadDbContext.PlayerScores.Any())
         {
-            var playerScores = new AutoFaker<PlayerScore>()
+            var playerScores = new AutoFaker<PlayerScoreReadModel>()
                 .RuleFor(x => x.Country, f => f.Address.Country())
                 .RuleFor(x => x.FirstName, f => f.Name.FirstName())
                 .RuleFor(x => x.LastName, f => f.Name.LastName())
                 .RuleFor(x => x.PlayerId, f => f.Internet.UserName())
                 .RuleFor(x => x.Score, f => f.Random.Number(1, 10000))
                 // we don't set rank here because for evaluating rank correctly we need all items present in database but here we have to add items one by one
-                .RuleFor(x => x.Rank, f => null)
                 .RuleFor(x => x.UpdatedAt, DateTime.Now)
                 .RuleFor(x => x.CreatedAt, DateTime.Now)
                 .RuleFor(x => x.LeaderBoardName, f => Constants.GlobalLeaderBoard)
                 .Generate(1500);
 
             // https://code-maze.com/dotnet-fast-inserts-entity-framework-ef-core/
-            await _leaderBoardDbContext.BulkInsertAsync(playerScores);
+            await _leaderBoardReadDbContext.BulkInsertAsync(playerScores);
         }
 
         if (_readThroughOptions.UseCacheWarmUp)
@@ -71,12 +69,12 @@ public class DataSeeder : ISeeder
 
             // loading all data from database to cache
             // for working ranks correctly we should load all items form primary database to cache for using sortedset for calculating ranks
-            IQueryable<PlayerScore> postgresItems = isDesc
-                ? _leaderBoardDbContext.PlayerScores
+            IQueryable<PlayerScoreReadModel> postgresItems = isDesc
+                ? _leaderBoardReadDbContext.PlayerScores
                     .AsNoTracking()
                     .Where(x => x.LeaderBoardName == Constants.GlobalLeaderBoard)
                     .OrderByDescending(x => x.Score)
-                : _leaderBoardDbContext.PlayerScores
+                : _leaderBoardReadDbContext.PlayerScores
                     .AsNoTracking()
                     .Where(x => x.LeaderBoardName == Constants.GlobalLeaderBoard)
                     .OrderBy(x => x.Score);
@@ -85,7 +83,7 @@ public class DataSeeder : ISeeder
         }
     }
 
-    private async Task PopulateCache(IQueryable<PlayerScore> databaseQuery)
+    private async Task PopulateCache(IQueryable<PlayerScoreReadModel> databaseQuery)
     {
         await foreach (var playerScore in LoadDatabaseItemByPaging(databaseQuery))
         {
@@ -94,8 +92,8 @@ public class DataSeeder : ISeeder
     }
 
     //https://dev.to/mbernard/asynchronous-streams-in-c-8-0-33la
-    private async IAsyncEnumerable<PlayerScore> LoadDatabaseItemByPaging(
-        IQueryable<PlayerScore> databaseQuery
+    private async IAsyncEnumerable<PlayerScoreReadModel> LoadDatabaseItemByPaging(
+        IQueryable<PlayerScoreReadModel> databaseQuery
     )
     {
         int pageNumber = 0;
@@ -116,9 +114,9 @@ public class DataSeeder : ISeeder
         }
     }
 
-    private async Task PopulateCache(PlayerScore playerScore)
+    private async Task PopulateCache(PlayerScoreReadModel playerScore)
     {
-        var key = $"{nameof(PlayerScore).Underscore()}:{playerScore.PlayerId}";
+        var key = $"{nameof(PlayerScoreReadModel).Underscore()}:{playerScore.PlayerId}";
 
         // store the summary of our player-score in sortedset, it cannot store all information
         await _redisDatabase.SortedSetAddAsync(playerScore.LeaderBoardName, key, playerScore.Score);
@@ -128,17 +126,9 @@ public class DataSeeder : ISeeder
             key,
             new HashEntry[]
             {
-                new(nameof(PlayerScore.Country).Underscore(), playerScore.Country),
-                new(nameof(PlayerScore.FirstName).Underscore(), playerScore.FirstName),
-                new(nameof(PlayerScore.LastName).Underscore(), playerScore.LastName),
-                new(
-                    nameof(PlayerScore.UpdatedAt).Underscore(),
-                    playerScore.UpdatedAt.ToString(CultureInfo.InvariantCulture)
-                ),
-                new(
-                    nameof(PlayerScore.CreatedAt).Underscore(),
-                    playerScore.CreatedAt.ToString(CultureInfo.InvariantCulture)
-                )
+                new(nameof(PlayerScoreReadModel.Country).Underscore(), playerScore.Country),
+                new(nameof(PlayerScoreReadModel.FirstName).Underscore(), playerScore.FirstName),
+                new(nameof(PlayerScoreReadModel.LastName).Underscore(), playerScore.LastName)
             }
         );
     }

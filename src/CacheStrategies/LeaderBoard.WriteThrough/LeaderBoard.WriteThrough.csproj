@@ -17,4 +17,9 @@
     <ProjectReference Include="..\..\Shared\LeaderBoard.SharedKernel\LeaderBoard.SharedKernel.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="PlayerScore\Features\" />
+    <Folder Include="Shared\" />
+  </ItemGroup>
+
 </Project>

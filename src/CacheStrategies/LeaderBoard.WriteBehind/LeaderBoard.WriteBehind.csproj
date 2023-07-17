@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="WriteBehindStrategies\Broker\" />
+    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>

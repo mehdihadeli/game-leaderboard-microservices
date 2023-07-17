@@ -1,6 +1,5 @@
-using System.Globalization;
 using Humanizer;
-using LeaderBoard.ReadThrough.Dtos;
+using LeaderBoard.ReadThrough.PlayerScores.Dtos;
 using LeaderBoard.ReadThrough.Providers;
 using LeaderBoard.SharedKernel.Application.Models;
 using Microsoft.EntityFrameworkCore;
@@ -44,6 +43,8 @@ public class ReadThrough : IReadThrough
             isDesc ? Order.Descending : Order.Ascending
         );
 
+        var startRank = isDesc ? start + 1 : results.Length;
+
         if (results == null || results.Length == 0)
         {
             // 2. If data not exist in the cache, read data from primary database
@@ -65,7 +66,7 @@ public class ReadThrough : IReadThrough
                 return null;
             }
 
-            var startRank = isDesc ? start + 1 : data.Count;
+            startRank = isDesc ? start + 1 : data.Count;
             return data.Select(
                     (x, i) =>
                         new PlayerScoreDto(
@@ -81,10 +82,7 @@ public class ReadThrough : IReadThrough
                 .ToList();
         }
 
-        var sortedsetItems = results.ToList();
-        var rankValue = isDesc ? start + 1 : results.Length;
-
-        foreach (var sortedsetItem in sortedsetItems)
+        foreach (var sortedsetItem in results)
         {
             string key = sortedsetItem.Element;
             var playerId = key.Split(":")[1];
@@ -101,7 +99,7 @@ public class ReadThrough : IReadThrough
                 playerId,
                 sortedsetItem.Score,
                 leaderBoardName,
-                rankValue,
+                startRank,
                 detail?.Country,
                 detail?.FirstName,
                 detail?.LastName
@@ -109,7 +107,7 @@ public class ReadThrough : IReadThrough
             playerScores.Add(playerScore);
 
             // next rank for next item
-            rankValue += counter;
+            startRank += counter;
         }
 
         return playerScores;
@@ -122,7 +120,7 @@ public class ReadThrough : IReadThrough
         CancellationToken cancellationToken = default
     )
     {
-        string key = $"{nameof(PlayerScore).Underscore()}:{playerId}";
+        string key = $"{nameof(PlayerScoreReadModel).Underscore()}:{playerId}";
 
         // 1. Read data form the cache
         var score = await _redisDatabase.SortedSetScoreAsync(leaderBoardName, playerId);
@@ -134,7 +132,7 @@ public class ReadThrough : IReadThrough
 
         if (score == null || rank == null)
         {
-            // 2. If data not exist in the cache, read data from primary database
+            // 2. If data not exist in the cache, first read data from primary database
             var playerScore = await _readProviderDatabase.GetGlobalScoreAndRank(
                 leaderBoardName,
                 playerId,
@@ -147,11 +145,18 @@ public class ReadThrough : IReadThrough
                 // 3. update cache with fetched results from primary database
                 await PopulateCache(playerScore);
 
+                rank = await _redisDatabase.SortedSetRankAsync(
+                    leaderBoardName,
+                    key,
+                    isDesc ? Order.Descending : Order.Ascending
+                );
+                rank = isDesc ? rank + 1 : rank - 1;
+
                 return new PlayerScoreDto(
                     playerId,
                     playerScore.Score,
                     leaderBoardName,
-                    playerScore.Rank ?? 1,
+                    rank,
                     playerScore.Country,
                     playerScore.FirstName,
                     playerScore.LastName
@@ -214,7 +219,7 @@ public class ReadThrough : IReadThrough
             .ToList();
     }
 
-    private async Task PopulateCache(IQueryable<PlayerScore> databaseQuery)
+    private async Task PopulateCache(IQueryable<PlayerScoreReadModel> databaseQuery)
     {
         await foreach (var playerScore in LoadDatabaseItemByPaging(databaseQuery))
         {
@@ -223,8 +228,8 @@ public class ReadThrough : IReadThrough
     }
 
     //https://dev.to/mbernard/asynchronous-streams-in-c-8-0-33la
-    private async IAsyncEnumerable<PlayerScore> LoadDatabaseItemByPaging(
-        IQueryable<PlayerScore> databaseQuery
+    private async IAsyncEnumerable<PlayerScoreReadModel> LoadDatabaseItemByPaging(
+        IQueryable<PlayerScoreReadModel> databaseQuery
     )
     {
         int pageNumber = 0;
@@ -245,9 +250,9 @@ public class ReadThrough : IReadThrough
         }
     }
 
-    private async Task PopulateCache(PlayerScore playerScore)
+    private async Task PopulateCache(PlayerScoreReadModel playerScore)
     {
-        var key = $"{nameof(PlayerScore).Underscore()}:{playerScore.PlayerId}";
+        var key = $"{nameof(PlayerScoreReadModel).Underscore()}:{playerScore.PlayerId}";
 
         // store the summary of our player-score in sortedset
         await _redisDatabase.SortedSetAddAsync(Constants.GlobalLeaderBoard, key, playerScore.Score);
@@ -257,17 +262,9 @@ public class ReadThrough : IReadThrough
             key,
             new HashEntry[]
             {
-                new(nameof(PlayerScore.Country).Underscore(), playerScore.Country),
-                new(nameof(PlayerScore.FirstName).Underscore(), playerScore.FirstName),
-                new(nameof(PlayerScore.LastName).Underscore(), playerScore.LastName),
-                new(
-                    nameof(PlayerScore.UpdatedAt).Underscore(),
-                    playerScore.UpdatedAt.ToString(CultureInfo.InvariantCulture)
-                ),
-                new(
-                    nameof(PlayerScore.CreatedAt).Underscore(),
-                    playerScore.CreatedAt.ToString(CultureInfo.InvariantCulture)
-                )
+                new(nameof(PlayerScoreReadModel.Country).Underscore(), playerScore.Country),
+                new(nameof(PlayerScoreReadModel.FirstName).Underscore(), playerScore.FirstName),
+                new(nameof(PlayerScoreReadModel.LastName).Underscore(), playerScore.LastName),
             }
         );
     }
@@ -306,12 +303,14 @@ public class ReadThrough : IReadThrough
         }
 
         var firstName = item.SingleOrDefault(
-            x => x.Name == nameof(PlayerScore.FirstName).Underscore()
+            x => x.Name == nameof(PlayerScoreReadModel.FirstName).Underscore()
         );
         var lastName = item.SingleOrDefault(
-            x => x.Name == nameof(PlayerScore.LastName).Underscore()
+            x => x.Name == nameof(PlayerScoreReadModel.LastName).Underscore()
         );
-        var country = item.SingleOrDefault(x => x.Name == nameof(PlayerScore.Country).Underscore());
+        var country = item.SingleOrDefault(
+            x => x.Name == nameof(PlayerScoreReadModel.Country).Underscore()
+        );
 
         return new PlayerScoreDetailDto(country.Value, firstName.Value, lastName.Value);
     }

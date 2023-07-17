@@ -27,28 +27,49 @@ public static class DatabaseExtensions
         await database.PublishMessage(channelName, data);
     }
 
+    public static async Task PublishMessage<T>(
+        this ITransaction transaction,
+        string channelName,
+        T data
+    )
+    {
+        var jsonData = JsonConvert.SerializeObject(
+            data,
+            new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            }
+        );
+
+        await transaction.PublishAsync(channelName, jsonData);
+    }
+
+    public static async Task PublishMessage<T>(this ITransaction transaction, T data)
+    {
+        var channelName = $"{typeof(T).Name.Underscore()}_channel";
+        await transaction.PublishMessage(channelName, data);
+    }
+
     public static async Task SubscribeMessage<T>(
         this IDatabase database,
         string channelName,
-        Action<string, T> handler
+        Func<string, T, Task> handler
     )
     {
-        await database.Multiplexer
+        var channelMessageQueue = await database.Multiplexer
             .GetSubscriber()
-            .SubscribeAsync(
-                channelName,
-                (chan, val) =>
-                {
-                    Guard.Against.NullOrEmpty(chan);
-                    Guard.Against.NullOrEmpty(val);
+            .SubscribeAsync(channelName);
 
-                    var message = JsonConvert.DeserializeObject<T>(val!);
-                    handler(chan!, message!);
-                }
-            );
+        var channelMessage = await channelMessageQueue.ReadAsync();
+
+        var message = JsonConvert.DeserializeObject<T>(channelMessage.Message!);
+        await handler(channelMessage.Channel!, message!);
     }
 
-    public static async Task SubscribeMessage<T>(this IDatabase database, Action<string, T> handler)
+    public static async Task SubscribeMessage<T>(
+        this IDatabase database,
+        Func<string, T, Task> handler
+    )
     {
         var channelName = $"{typeof(T).Name.Underscore()}_channel";
 
