@@ -1,6 +1,5 @@
-using Humanizer;
 using LeaderBoard.ReadThrough.PlayerScores.Dtos;
-using LeaderBoard.SharedKernel.Application.Models;
+using LeaderBoard.ReadThrough.Shared;
 using MediatR;
 using Microsoft.AspNetCore.Http.HttpResults;
 
@@ -14,16 +13,17 @@ public static class GetGlobalScoreAndRankEndpoint
     {
         return routeBuilder
             .MapGet("players/{playerId}", Handle)
-            .WithTags(nameof(PlayerScoreReadModel).Pluralize())
-            .WithName("GetGlobalScoreAndRank");
+            .WithTags(nameof(PlayerScores))
+            .WithName(nameof(GetGlobalScoreAndRank));
 
-        static async Task<Results<Ok<PlayerScoreDto>, ValidationProblem>> Handle(
+        static async Task<Results<Ok<PlayerScoreWithNeighborsDto>, ValidationProblem>> Handle(
             [AsParameters] GetRangeScoresAndRanksRequestParameter requestParameters
         )
         {
-            var (mediator, cancellationToken, playerId, leaderboardName) = requestParameters;
+            var (mediator, cancellationToken, playerId, leaderboardName, isDesc) =
+                requestParameters;
             var res = await mediator.Send(
-                new GetGlobalScoreAndRank(playerId, leaderboardName),
+                new GetGlobalScoreAndRank(playerId, leaderboardName, isDesc),
                 cancellationToken
             );
 
@@ -35,6 +35,7 @@ public static class GetGlobalScoreAndRankEndpoint
         IMediator Mediator,
         CancellationToken CancellationToken,
         string PlayerId,
-        string LeaderBoardName = Constants.GlobalLeaderBoard
+        string LeaderBoardName = Constants.GlobalLeaderBoard,
+        bool IsDesc = true
     );
 }

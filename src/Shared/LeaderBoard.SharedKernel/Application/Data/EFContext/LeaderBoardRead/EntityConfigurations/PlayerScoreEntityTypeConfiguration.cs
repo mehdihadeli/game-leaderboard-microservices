@@ -17,11 +17,11 @@ public class PlayerScoreReadModelEntityTypeConfiguration
 
         builder.Property(x => x.LeaderBoardName).HasMaxLength(50).IsRequired(true);
 
-        builder.Property(x => x.FirstName).HasMaxLength(50).IsRequired(false);
+        builder.Property(x => x.FirstName).HasMaxLength(50);
 
-        builder.Property(x => x.LastName).HasMaxLength(50).IsRequired(false);
+        builder.Property(x => x.LastName).HasMaxLength(50);
 
-        builder.Property(x => x.Country).HasMaxLength(100).IsRequired(false);
+        builder.Property(x => x.Country).HasMaxLength(100);
 
         builder.Property(x => x.Score).IsRequired();
     }

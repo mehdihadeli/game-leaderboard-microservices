@@ -1,5 +1,6 @@
 using AutoBogus;
 using Humanizer;
+using LeaderBoard.GameEventsProcessor.PlayerScores.Dtos;
 using LeaderBoard.SharedKernel.Application.Data.EFContext;
 using LeaderBoard.SharedKernel.Application.Models;
 using LeaderBoard.SharedKernel.Contracts.Data;
@@ -45,17 +46,15 @@ public class DataSeeder : ISeeder
         {
             if (!_leaderBoardReadDbContext.PlayerScores.Any())
             {
-                var playerScores = new AutoFaker<PlayerScoreReadModel>()
+                var playerScores = new AutoFaker<PlayerScoreDto>()
                     .RuleFor(x => x.Country, f => f.Address.Country())
                     .RuleFor(x => x.FirstName, f => f.Name.FirstName())
                     .RuleFor(x => x.LastName, f => f.Name.LastName())
                     .RuleFor(x => x.PlayerId, f => f.Random.Guid().ToString())
                     .RuleFor(x => x.Score, f => f.Random.Number(1, 10000))
                     // we don't set rank here because for evaluating rank correctly we need all items present in database but here we have to add items one by one
-                    .RuleFor(x => x.UpdatedAt, DateTime.Now)
-                    .RuleFor(x => x.CreatedAt, DateTime.Now)
                     .RuleFor(x => x.LeaderBoardName, f => Constants.GlobalLeaderBoard)
-                    .Generate(1500);
+                    .Generate(100);
 
                 foreach (var playerScore in playerScores)
                 {
@@ -68,45 +67,44 @@ public class DataSeeder : ISeeder
                         playerScore.Country
                     );
 
+                    // will update our EF postgres database and redis by our projections
                     await _aggregateStore.StoreAsync<PlayerScoreAggregate, string>(
                         playerScoreAggregate,
                         CancellationToken.None
                     );
                 }
-
-                // https://code-maze.com/dotnet-fast-inserts-entity-framework-ef-core/
-                await _leaderBoardReadDbContext.BulkInsertAsync(playerScores);
             }
+        }
 
-            // if (_leaderBoardOptions.UseCacheWarmUp)
-            // {
-            //     await WarmingUpCache();
-            // }
+        // Because we delete all caches in each run we fill our cache again from our primary database
+        if (_leaderBoardOptions.UseCacheWarmUp)
+        {
+            await WarmingUpCache();
         }
     }
 
-    // private async Task WarmingUpCache()
-    // {
-    //     var sortedsetLenght = _redisDatabase.SortedSetLength(Constants.GlobalLeaderBoard);
-    //     if (sortedsetLenght == 0)
-    //     {
-    //         bool isDesc = true;
-    //
-    //         // loading all data from database to cache
-    //         // for working ranks correctly we should load all items form primary database to cache for using sortedset for calculating ranks
-    //         IQueryable<PlayerScoreReadModel> postgresItems = isDesc
-    //             ? _leaderBoardReadDbContext.PlayerScores
-    //                 .AsNoTracking()
-    //                 .Where(x => x.LeaderBoardName == Constants.GlobalLeaderBoard)
-    //                 .OrderByDescending(x => x.Score)
-    //             : _leaderBoardReadDbContext.PlayerScores
-    //                 .AsNoTracking()
-    //                 .Where(x => x.LeaderBoardName == Constants.GlobalLeaderBoard)
-    //                 .OrderBy(x => x.Score);
-    //
-    //         await PopulateCache(postgresItems);
-    //     }
-    // }
+    private async Task WarmingUpCache()
+    {
+        var sortedsetLenght = _redisDatabase.SortedSetLength(Constants.GlobalLeaderBoard);
+        if (sortedsetLenght == 0)
+        {
+            bool isDesc = true;
+
+            // loading all data from EF postgres database to cache
+            // for working ranks correctly we should load all items form primary database to cache for using sortedset for calculating ranks
+            IQueryable<PlayerScoreReadModel> postgresItems = isDesc
+                ? _leaderBoardReadDbContext.PlayerScores
+                    .AsNoTracking()
+                    .Where(x => x.LeaderBoardName == Constants.GlobalLeaderBoard)
+                    .OrderByDescending(x => x.Score)
+                : _leaderBoardReadDbContext.PlayerScores
+                    .AsNoTracking()
+                    .Where(x => x.LeaderBoardName == Constants.GlobalLeaderBoard)
+                    .OrderBy(x => x.Score);
+
+            await PopulateCache(postgresItems);
+        }
+    }
 
     private async Task PopulateCache(IQueryable<PlayerScoreReadModel> databaseQuery)
     {

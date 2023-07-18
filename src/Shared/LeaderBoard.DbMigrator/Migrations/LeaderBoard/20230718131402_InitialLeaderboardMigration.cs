@@ -18,9 +18,9 @@ namespace LeaderBoard.DbMigrator.Migrations.LeaderBoard
                     player_id = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     score = table.Column<double>(type: "double precision", nullable: false),
                     leader_board_name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    country = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    first_name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    last_name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    country = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    first_name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    last_name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     last_processed_position = table.Column<decimal>(type: "numeric(20,0)", nullable: false)

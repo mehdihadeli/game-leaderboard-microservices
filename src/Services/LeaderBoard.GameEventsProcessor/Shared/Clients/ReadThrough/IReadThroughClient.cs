@@ -11,14 +11,13 @@ public interface IReadThroughClient
         bool isDesc = true,
         CancellationToken cancellationToken = default
     );
-    Task<PlayerScoreDto?> GetGlobalScoreAndRank(
+    Task<PlayerScoreWithNeighborsDto?> GetGlobalScoreAndRank(
         string leaderBoardName,
         string playerId,
         bool isDesc = true,
         CancellationToken cancellationToken = default
     );
-
-    Task<List<PlayerScoreDto>?> GetPlayerGroupScoresAndRanks(
+    Task<List<PlayerScoreWithNeighborsDto>?> GetPlayerGroupGlobalScoresAndRanks(
         string leaderBoardName,
         IEnumerable<string> playerIds,
         bool isDesc = true,

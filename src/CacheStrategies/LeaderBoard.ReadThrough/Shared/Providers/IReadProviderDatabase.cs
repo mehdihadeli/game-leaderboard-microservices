@@ -1,6 +1,6 @@
 using LeaderBoard.SharedKernel.Application.Models;
 
-namespace LeaderBoard.ReadThrough.Providers;
+namespace LeaderBoard.ReadThrough.Shared.Providers;
 
 public interface IReadProviderDatabase
 {

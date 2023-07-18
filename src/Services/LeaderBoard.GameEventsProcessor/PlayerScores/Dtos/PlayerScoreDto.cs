@@ -5,7 +5,7 @@ public record PlayerScoreDto(
     double Score,
     string LeaderBoardName,
     long? Rank,
-    string? FirstName = null,
-    string? LastName = null,
-    string? Country = null
+    string FirstName,
+    string LastName,
+    string Country
 );

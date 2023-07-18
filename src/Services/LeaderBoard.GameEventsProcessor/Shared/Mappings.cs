@@ -11,6 +11,8 @@ public class Mappings : Profile
     {
         CreateMap<PlayerScoreReadModel, PlayerScoreDto>();
         CreateMap<PlayerScoreDto, PlayerScoreClientDto>();
+        CreateMap<PlayerScoreWithNeighborsDto, PlayerScoreWithNeighborsClientDto>();
+        CreateMap<PlayerScoreWithNeighborsClientDto, PlayerScoreWithNeighborsDto>();
         CreateMap<PlayerScoreClientDto, PlayerScoreDto>();
     }
 }

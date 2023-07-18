@@ -7,23 +7,24 @@ namespace LeaderBoard.GameEventsProcessor.PlayerScores.Features.GettingGlobalSco
 
 public static class GetGlobalScoreAndRankEndpoint
 {
-    internal static RouteHandlerBuilder MapGetGlobalScoreAndRank(
+    internal static RouteHandlerBuilder MapGetGlobalScoreAndRankEndpoint(
         this IEndpointRouteBuilder routeBuilder
     )
     {
         return routeBuilder
             .MapGet("players/{playerId:guid}", Handle)
             .WithTags(nameof(PlayerScores))
-            .WithName("GetGlobalScoreAndRank");
+            .WithName(nameof(GetGlobalScoreAndRank));
 
-        static async Task<Results<Ok<PlayerScoreDto>, ValidationProblem>> Handle(
+        static async Task<Results<Ok<PlayerScoreWithNeighborsDto>, ValidationProblem>> Handle(
             [AsParameters] GetRangeScoresAndRanksRequestParameter requestParameters
         )
         {
-            var (mediator, cancellationToken, playerId, leaderboardName) = requestParameters;
+            var (mediator, cancellationToken, playerId, leaderboardName, isDesc) =
+                requestParameters;
 
             var res = await mediator.Send(
-                new GetGlobalScoreAndRank(playerId, leaderboardName),
+                new GetGlobalScoreAndRank(playerId, leaderboardName, isDesc),
                 cancellationToken
             );
 
@@ -35,6 +36,7 @@ public static class GetGlobalScoreAndRankEndpoint
         IMediator Mediator,
         CancellationToken CancellationToken,
         Guid PlayerId,
-        string LeaderBoardName = Constants.GlobalLeaderBoard
+        string LeaderBoardName = Constants.GlobalLeaderBoard,
+        bool IsDesc = true
     );
 }

@@ -1,4 +1,4 @@
-namespace LeaderBoard.ReadThrough;
+namespace LeaderBoard.ReadThrough.Shared;
 
 public static class Constants
 {

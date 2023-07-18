@@ -9,9 +9,9 @@ public class PlayerScoreReadModel : IAuditable, IVersionedProjection
     public string PlayerId { get; set; } = default!;
     public double Score { get; set; }
     public string LeaderBoardName { get; set; } = default!;
-    public string? Country { get; set; }
-    public string? FirstName { get; set; }
-    public string? LastName { get; set; }
+    public string Country { get; set; } = default!;
+    public string FirstName { get; set; } = default!;
+    public string LastName { get; set; } = default!;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public ulong LastProcessedPosition { get; set; }

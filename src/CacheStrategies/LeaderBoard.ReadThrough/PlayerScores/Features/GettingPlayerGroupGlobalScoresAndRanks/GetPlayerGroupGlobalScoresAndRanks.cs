@@ -4,17 +4,16 @@ using LeaderBoard.ReadThrough.Shared.Services;
 using LeaderBoard.SharedKernel.Core.Extensions;
 using MediatR;
 
-namespace LeaderBoard.ReadThrough.PlayerScores.Features.GettingRangeScoresAndRanks;
+namespace LeaderBoard.ReadThrough.PlayerScores.Features.GettingPlayerGroupGlobalScoresAndRanks;
 
-internal record GetRangeScoresAndRanks(
+internal record GetPlayerGroupGlobalScoresAndRanks(
+    IEnumerable<string> PlayerIds,
     string LeaderBoardName = Constants.GlobalLeaderBoard,
-    int Start = 0,
-    int End = 9,
     bool IsDesc = true
-) : IRequest<IList<PlayerScoreDto>?>;
+) : IRequest<IList<PlayerScoreWithNeighborsDto>?>;
 
 internal class GetRangeScoresAndRanksHandler
-    : IRequestHandler<GetRangeScoresAndRanks, IList<PlayerScoreDto>?>
+    : IRequestHandler<GetPlayerGroupGlobalScoresAndRanks, IList<PlayerScoreWithNeighborsDto>?>
 {
     private readonly IReadThrough _readThrough;
 
@@ -23,17 +22,16 @@ internal class GetRangeScoresAndRanksHandler
         _readThrough = readThrough;
     }
 
-    public async Task<IList<PlayerScoreDto>?> Handle(
-        GetRangeScoresAndRanks request,
+    public async Task<IList<PlayerScoreWithNeighborsDto>?> Handle(
+        GetPlayerGroupGlobalScoresAndRanks request,
         CancellationToken cancellationToken
     )
     {
         request.NotBeNull();
 
-        return await _readThrough.GetRangeScoresAndRanks(
+        return await _readThrough.GetPlayerGroupGlobalScoresAndRanks(
             request.LeaderBoardName,
-            request.Start,
-            request.End,
+            request.PlayerIds,
             request.IsDesc,
             cancellationToken
         );

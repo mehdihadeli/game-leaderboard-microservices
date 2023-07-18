@@ -1,11 +1,10 @@
 using System.Reflection;
 using Humanizer;
 using LeaderBoard.DbMigrator;
-using LeaderBoard.GameEventsProcessor;
 using LeaderBoard.GameEventsProcessor.PlayerScores.Features.AddingOrUpdatingPlayerScore;
 using LeaderBoard.GameEventsProcessor.PlayerScores.Features.AddingOrUpdatingPlayerScore.Events.External;
 using LeaderBoard.GameEventsProcessor.PlayerScores.Features.GettingGlobalScoreAdnRank;
-using LeaderBoard.GameEventsProcessor.PlayerScores.Features.GettingPlayerGroupScoresAndRanks;
+using LeaderBoard.GameEventsProcessor.PlayerScores.Features.GettingPlayerGroupGlobalScoresAndRanks;
 using LeaderBoard.GameEventsProcessor.PlayerScores.Features.GettingRangeScoresAndRanks;
 using LeaderBoard.GameEventsProcessor.Shared;
 using LeaderBoard.GameEventsProcessor.Shared.Data;
@@ -176,9 +175,9 @@ try
 
     var scoreGroup = app.MapGroup("global-board/scores")
         .WithTags(nameof(PlayerScoreReadModel).Pluralize());
-    scoreGroup.MapGetGlobalScoreAndRank();
-    scoreGroup.MapGetPlayerGroupScoresAndRanks();
-    scoreGroup.MapGetRangeScoresAndRanks();
+    scoreGroup.MapGetGlobalScoreAndRankEndpoint();
+    scoreGroup.MapGetPlayerGroupGlobalScoresAndRanksEndpoint();
+    scoreGroup.MapGetRangeScoresAndRanksEndpoint();
     scoreGroup.MapAddOrUpdatePlayerScoreEndpoint();
 
     // Configure the HTTP request pipeline.

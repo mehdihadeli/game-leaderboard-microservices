@@ -7,21 +7,25 @@ namespace LeaderBoard.GameEventsProcessor.PlayerScores.Features.GettingRangeScor
 
 public static class GetRangeScoresAndRanksEndpoint
 {
-    internal static RouteHandlerBuilder MapGetRangeScoresAndRanks(
+    internal static RouteHandlerBuilder MapGetRangeScoresAndRanksEndpoint(
         this IEndpointRouteBuilder routeBuilder
     )
     {
         return routeBuilder
             .MapGet("range", Handle)
             .WithTags(nameof(PlayerScores))
-            .WithName("GetRangeScoresAndRanks");
+            .WithName(nameof(GetRangeScoresAndRanks));
 
         static async Task<Results<Ok<IList<PlayerScoreDto>>, ValidationProblem>> Handle(
             [AsParameters] GetRangeScoresAndRanksRequestParameter requestParameters
         )
         {
-            var (mediator, cancellationToken, leaderboardName, start, end) = requestParameters;
-            var res = await mediator.Send(new GetRangeScoresAndRanks(leaderboardName, start, end));
+            var (mediator, cancellationToken, leaderboardName, start, end, isDesc) =
+                requestParameters;
+            var res = await mediator.Send(
+                new GetRangeScoresAndRanks(leaderboardName, start, end, isDesc),
+                cancellationToken
+            );
 
             return TypedResults.Ok(res);
         }
@@ -32,6 +36,7 @@ public static class GetRangeScoresAndRanksEndpoint
         CancellationToken CancellationToken,
         string LeaderBoardName = Constants.GlobalLeaderBoard,
         int Start = 0,
-        int End = 9
+        int End = 9,
+        bool IsDesc = true
     );
 }

@@ -4,7 +4,6 @@ using LeaderBoard.GameEventsProcessor.Shared;
 using LeaderBoard.GameEventsProcessor.Shared.Clients.ReadThrough;
 using LeaderBoard.GameEventsProcessor.Shared.Services;
 using LeaderBoard.SharedKernel.Application.Models;
-using LeaderBoard.SharedKernel.Contracts.Data.EventStore;
 using LeaderBoard.SharedKernel.Core.Extensions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -14,15 +13,14 @@ using LeaderBoardReadDbContext = LeaderBoard.SharedKernel.Application.Data.EFCon
 
 namespace LeaderBoard.GameEventsProcessor.PlayerScores.Features.GettingGlobalScoreAdnRank;
 
-public record GetGlobalScoreAndRank(Guid PlayerId, string LeaderBoardName)
-    : IRequest<PlayerScoreDto?>;
+public record GetGlobalScoreAndRank(Guid PlayerId, string LeaderBoardName, bool IsDesc = true)
+    : IRequest<PlayerScoreWithNeighborsDto?>;
 
 internal class GetGlobalScoreAndRankHandler
-    : IRequestHandler<GetGlobalScoreAndRank, PlayerScoreDto?>
+    : IRequestHandler<GetGlobalScoreAndRank, PlayerScoreWithNeighborsDto?>
 {
     private readonly LeaderBoardReadDbContext _leaderBoardReadDbContext;
     private readonly IReadThroughClient _readThroughClient;
-    private readonly IAggregateStore _aggregateStore;
     private readonly IPlayerScoreService _playerScoreService;
     private readonly LeaderBoardOptions _leaderboardOptions;
     private readonly IDatabase _redisDatabase;
@@ -31,35 +29,32 @@ internal class GetGlobalScoreAndRankHandler
         IConnectionMultiplexer redisConnection,
         LeaderBoardReadDbContext leaderBoardReadDbContext,
         IReadThroughClient readThroughClient,
-        IAggregateStore aggregateStore,
         IPlayerScoreService playerScoreService,
         IOptions<LeaderBoardOptions> leaderboardOptions
     )
     {
         _leaderBoardReadDbContext = leaderBoardReadDbContext;
         _readThroughClient = readThroughClient;
-        _aggregateStore = aggregateStore;
         _playerScoreService = playerScoreService;
         _leaderboardOptions = leaderboardOptions.Value;
         _redisDatabase = redisConnection.GetDatabase();
     }
 
-    public async Task<PlayerScoreDto?> Handle(
+    public async Task<PlayerScoreWithNeighborsDto?> Handle(
         GetGlobalScoreAndRank request,
         CancellationToken cancellationToken
     )
     {
         request.NotBeNull();
 
-        bool isDesc = true;
         string key = $"{nameof(PlayerScoreReadModel).Underscore()}:{request.PlayerId}";
 
         if (_leaderboardOptions.UseReadThrough)
         {
             return await _readThroughClient.GetGlobalScoreAndRank(
                 request.LeaderBoardName,
-                key,
-                isDesc,
+                request.PlayerId.ToString(),
+                request.IsDesc,
                 cancellationToken
             );
         }
@@ -68,15 +63,15 @@ internal class GetGlobalScoreAndRankHandler
         var rank = await _redisDatabase.SortedSetRankAsync(
             request.LeaderBoardName,
             key,
-            isDesc ? Order.Descending : Order.Ascending
+            request.IsDesc ? Order.Descending : Order.Ascending
         );
-        rank = isDesc ? rank + 1 : rank - 1;
 
         if ((score == null || rank == null) && _leaderboardOptions.UseReadCacheAside)
         {
             var playerIdString = request.PlayerId.ToString();
 
-            // First read from EF postgres database as backup database and then if not exists read from primary database EventStoreDB
+            // https://developers.eventstore.com/server/v22.10/projections.html#streams-projection
+            // First read from EF postgres database as backup database and then if not exists read from primary database EventStoreDB (but we have some limitations reading all streams and filtering!)
             var playerScore = await _leaderBoardReadDbContext.PlayerScores.SingleOrDefaultAsync(
                 x =>
                     x.PlayerId == playerIdString
@@ -90,79 +85,72 @@ internal class GetGlobalScoreAndRankHandler
                 rank = await _redisDatabase.SortedSetRankAsync(
                     request.LeaderBoardName,
                     key,
-                    isDesc ? Order.Descending : Order.Ascending
+                    request.IsDesc ? Order.Descending : Order.Ascending
                 );
-                rank = isDesc ? rank + 1 : rank - 1;
+                rank = request.IsDesc ? rank + 1 : rank - 1;
 
-                return new PlayerScoreDto(
-                    request.PlayerId.ToString(),
-                    playerScore.Score,
+                var nextMember = await _playerScoreService.GetNextMember(
                     request.LeaderBoardName,
-                    rank,
-                    playerScore.Country,
-                    playerScore.FirstName,
-                    playerScore.LastName
+                    key,
+                    request.IsDesc
                 );
-            }
+                var previousMember = await _playerScoreService.GetPreviousMember(
+                    request.LeaderBoardName,
+                    key,
+                    request.IsDesc
+                );
 
-            if (playerScore == null)
-            {
-                // data not exists on EF Postgres so we search on EventStoreDB
-                var playerScoreAggregate = await _aggregateStore.GetAsync<
-                    PlayerScoreAggregate,
-                    string
-                >(playerIdString, cancellationToken);
-                if (playerScoreAggregate != null)
-                {
-                    await _playerScoreService.PopulateCache(
-                        new PlayerScoreReadModel
-                        {
-                            PlayerId = playerScoreAggregate.Id,
-                            Score = playerScoreAggregate.Score,
-                            LeaderBoardName = playerScoreAggregate.LeaderBoardName,
-                            FirstName = playerScoreAggregate.FirstName,
-                            LastName = playerScoreAggregate.LastName,
-                            Country = playerScoreAggregate.Country,
-                            CreatedAt = playerScoreAggregate.Created,
-                        }
-                    );
-
-                    rank = await _redisDatabase.SortedSetRankAsync(
+                return new PlayerScoreWithNeighborsDto(
+                    previousMember,
+                    new PlayerScoreDto(
+                        request.PlayerId.ToString(),
+                        playerScore.Score,
                         request.LeaderBoardName,
-                        key,
-                        isDesc ? Order.Descending : Order.Ascending
-                    );
-                    rank = isDesc ? rank + 1 : rank - 1;
-
-                    return new PlayerScoreDto(
-                        playerScoreAggregate.Id,
-                        playerScoreAggregate.Score,
-                        playerScoreAggregate.LeaderBoardName,
                         rank,
-                        playerScoreAggregate.Country,
-                        playerScoreAggregate.FirstName,
-                        playerScoreAggregate.LastName
-                    );
-                }
+                        playerScore.Country,
+                        playerScore.FirstName,
+                        playerScore.LastName
+                    ),
+                    nextMember
+                );
             }
 
             return null;
         }
+        else
+        {
+            PlayerScoreDetailDto? detail = await _playerScoreService.GetPlayerScoreDetail(
+                request.LeaderBoardName,
+                key,
+                request.IsDesc,
+                cancellationToken
+            );
+            var nextMember = await _playerScoreService.GetNextMember(
+                request.LeaderBoardName,
+                key,
+                request.IsDesc
+            );
+            var previousMember = await _playerScoreService.GetPreviousMember(
+                request.LeaderBoardName,
+                key,
+                request.IsDesc
+            );
 
-        PlayerScoreDetailDto? detail = await _playerScoreService.GetPlayerScoreDetail(
-            request.LeaderBoardName,
-            key,
-            isDesc,
-            cancellationToken
-        );
-        return new PlayerScoreDto(
-            request.PlayerId.ToString(),
-            score ?? 0,
-            request.LeaderBoardName,
-            rank ?? 1,
-            detail?.Country,
-            detail?.FirstName,
-            detail?.LastName
-        );
+            rank = request.IsDesc ? rank + 1 : rank - 1;
+
+            return new PlayerScoreWithNeighborsDto(
+                previousMember,
+                new PlayerScoreDto(
+                    request.PlayerId.ToString(),
+                    score ?? 0,
+                    request.LeaderBoardName,
+                    rank ?? 1,
+                    detail?.Country ?? string.Empty,
+                    detail?.FirstName ?? string.Empty,
+                    detail?.LastName ?? string.Empty
+                ),
+                nextMember
+            );
+        }
     }
 }

@@ -1,7 +1,7 @@
 using LeaderBoard.SharedKernel.Web.ProblemDetail;
 using Microsoft.AspNetCore.Diagnostics;
 
-namespace LeaderBoard.ReadThrough.Extensions.WebApplicationBuilderExtensions;
+namespace LeaderBoard.ReadThrough.Shared.Extensions.WebApplicationBuilderExtensions;
 
 public static partial class WebApplicationBuilderExtensions
 {

@@ -16,7 +16,8 @@ namespace LeaderBoard.GameEventsProcessor.PlayerScores.Features.GettingRangeScor
 public record GetRangeScoresAndRanks(
     string LeaderBoardName = Constants.GlobalLeaderBoard,
     int Start = 0,
-    int End = 9
+    int End = 9,
+    bool IsDesc = true
 ) : IRequest<IList<PlayerScoreDto>?>;
 
 internal class GetRangeScoresAndRanksHandler
@@ -51,34 +52,33 @@ internal class GetRangeScoresAndRanksHandler
     {
         request.NotBeNull();
 
-        var isDesc = true;
-
         if (_leaderboardOptions.UseReadThrough)
         {
             return await _readThroughClient.GetRangeScoresAndRanks(
                 request.LeaderBoardName,
                 request.Start,
                 request.End,
-                isDesc,
+                request.IsDesc,
                 cancellationToken
             );
         }
 
-        var counter = isDesc ? 1 : -1;
+        var counter = 1;
         var playerScores = new List<PlayerScoreDto>();
         var results = await _redisDatabase.SortedSetRangeByRankWithScoresAsync(
             request.LeaderBoardName,
             request.Start,
             request.End,
-            isDesc ? Order.Descending : Order.Ascending
+            request.IsDesc ? Order.Descending : Order.Ascending
         );
 
-        var startRank = isDesc ? request.Start + 1 : results.Length;
+        var startRank = request.Start + 1;
 
         if ((results == null || results.Length == 0) && _leaderboardOptions.UseReadCacheAside)
         {
-            // if data is not available on the cache, at first we try to get items from EF postgres read database and if not available we should go search on EventStoreDB
-            IQueryable<PlayerScoreReadModel> postgresItems = isDesc
+            // https://developers.eventstore.com/server/v22.10/projections.html#streams-projection
+            // if data is not available on the cache, First read from EF postgres database as backup database and then if not exists read from primary database EventStoreDB (but we have some limitations reading all streams and filtering!)
+            IQueryable<PlayerScoreReadModel> postgresItems = request.IsDesc
                 ? _leaderBoardReadDbContext.PlayerScores
                     .AsNoTracking()
                     .Where(x => x.LeaderBoardName == Constants.GlobalLeaderBoard)
@@ -97,17 +97,9 @@ internal class GetRangeScoresAndRanksHandler
 
             if (data.Count == 0)
             {
-                //// Search on EventStoreDB
-                // data = fetchedDataFromEsdb
-                // if (data.Count == 0)
-                // {
-                //     return null;
-                // }
-
                 return null;
             }
 
-            startRank = isDesc ? request.Start + 1 : data.Count;
             return data.Select(
                     (x, i) =>
                         new PlayerScoreDto(
@@ -135,7 +127,7 @@ internal class GetRangeScoresAndRanksHandler
             var detail = await _playerScoreService.GetPlayerScoreDetail(
                 request.LeaderBoardName,
                 key,
-                isDesc,
+                request.IsDesc,
                 cancellationToken
             );
 
@@ -144,9 +136,9 @@ internal class GetRangeScoresAndRanksHandler
                 sortedsetItem.Score,
                 request.LeaderBoardName,
                 startRank,
-                detail?.Country,
-                detail?.FirstName,
-                detail?.LastName
+                detail?.Country ?? string.Empty,
+                detail?.FirstName ?? string.Empty,
+                detail?.LastName ?? string.Empty
             );
             playerScores.Add(playerScore);
 

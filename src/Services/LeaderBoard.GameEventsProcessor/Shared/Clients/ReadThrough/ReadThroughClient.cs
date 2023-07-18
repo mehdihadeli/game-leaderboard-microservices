@@ -2,6 +2,7 @@ using AutoMapper;
 using LeaderBoard.GameEventsProcessor.PlayerScores.Dtos;
 using LeaderBoard.GameEventsProcessor.Shared.Clients.ReadThrough.Dtos;
 using LeaderBoard.SharedKernel.Core.Extensions;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Options;
 
 namespace LeaderBoard.GameEventsProcessor.Shared.Clients.ReadThrough;
@@ -31,9 +32,18 @@ public class ReadThroughClient : IReadThroughClient
         CancellationToken cancellationToken = default
     )
     {
+        // https://stackoverflow.com/a/67877742/581476
+        var qb = new QueryBuilder
+                 {
+                     { nameof(start), start.ToString() },
+                     { nameof(end), end.ToString() },
+                     { nameof(leaderBoardName), leaderBoardName },
+                     { nameof(isDesc), isDesc.ToString() },
+                 };
+
         // https://github.com/App-vNext/Polly#handing-return-values-and-policytresult
         var httpResponse = await _httpClient.GetAsync(
-            $"{_readThroughHttpClientOptions.PlayersScoreEndpoint}/range?leaderBoardName={leaderBoardName}&start={start}&end={end}&isDesc={isDesc}",
+            $"{_readThroughHttpClientOptions.PlayersScoreEndpoint}/range?{qb.ToQueryString().Value}",
             cancellationToken
         );
 
@@ -50,16 +60,23 @@ public class ReadThroughClient : IReadThroughClient
         return dtos;
     }
 
-    public async Task<PlayerScoreDto?> GetGlobalScoreAndRank(
+    public async Task<PlayerScoreWithNeighborsDto?> GetGlobalScoreAndRank(
         string leaderBoardName,
         string playerId,
         bool isDesc = true,
         CancellationToken cancellationToken = default
     )
     {
+        // https://stackoverflow.com/a/67877742/581476
+        var qb = new QueryBuilder
+        {
+            { nameof(leaderBoardName), leaderBoardName },
+            { nameof(isDesc), isDesc.ToString() },
+        };
+
         // https://github.com/App-vNext/Polly#handing-return-values-and-policytresult
         var httpResponse = await _httpClient.GetAsync(
-            $"{_readThroughHttpClientOptions.PlayersScoreEndpoint}/players/{playerId}?leaderBoardName={leaderBoardName}&isDesc={isDesc}",
+            $"{_readThroughHttpClientOptions.PlayersScoreEndpoint}/players/{playerId}?{qb.ToQueryString().Value}",
             cancellationToken
         );
 
@@ -67,25 +84,34 @@ public class ReadThroughClient : IReadThroughClient
         // throw HttpResponseException instead of HttpRequestException (because we want detail response exception) with corresponding status code
         await httpResponse.EnsureSuccessStatusCodeWithDetailAsync();
 
-        var playerScoreDto = await httpResponse.Content.ReadFromJsonAsync<PlayerScoreClientDto>(
-            cancellationToken: cancellationToken
-        );
+        var playerScoreDto =
+            await httpResponse.Content.ReadFromJsonAsync<PlayerScoreWithNeighborsClientDto>(
+                cancellationToken: cancellationToken
+            );
 
-        var dto = _mapper.Map<PlayerScoreDto>(playerScoreDto);
+        var dto = _mapper.Map<PlayerScoreWithNeighborsDto>(playerScoreDto);
 
         return dto;
     }
 
-    public async Task<List<PlayerScoreDto>?> GetPlayerGroupScoresAndRanks(
+    public async Task<List<PlayerScoreWithNeighborsDto>?> GetPlayerGroupGlobalScoresAndRanks(
         string leaderBoardName,
         IEnumerable<string> playerIds,
         bool isDesc = true,
         CancellationToken cancellationToken = default
     )
     {
+        // https://stackoverflow.com/a/67877742/581476
+        var qb = new QueryBuilder
+        {
+            { nameof(leaderBoardName), leaderBoardName },
+            { nameof(isDesc), isDesc.ToString() },
+            { nameof(playerIds), playerIds },
+        };
+
         // https://github.com/App-vNext/Polly#handing-return-values-and-policytresult
         var httpResponse = await _httpClient.GetAsync(
-            $"{_readThroughHttpClientOptions.PlayersScoreEndpoint}/players?leaderBoardName={leaderBoardName}&playerIds={playerIds}&isDesc={isDesc}",
+            $"{_readThroughHttpClientOptions.PlayersScoreEndpoint}/players?{qb.ToQueryString().Value}",
             cancellationToken
         );
 
@@ -94,10 +120,10 @@ public class ReadThroughClient : IReadThroughClient
         await httpResponse.EnsureSuccessStatusCodeWithDetailAsync();
 
         var playerScoreClientDtos = await httpResponse.Content.ReadFromJsonAsync<
-            List<PlayerScoreClientDto>
+            List<PlayerScoreWithNeighborsClientDto>
         >(cancellationToken: cancellationToken);
 
-        var dtos = _mapper.Map<List<PlayerScoreDto>>(playerScoreClientDtos);
+        var dtos = _mapper.Map<List<PlayerScoreWithNeighborsDto>>(playerScoreClientDtos);
 
         return dtos;
     }

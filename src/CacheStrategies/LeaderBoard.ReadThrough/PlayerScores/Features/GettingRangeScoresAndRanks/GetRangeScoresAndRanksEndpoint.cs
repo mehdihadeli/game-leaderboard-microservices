@@ -1,5 +1,6 @@
 using Humanizer;
 using LeaderBoard.ReadThrough.PlayerScores.Dtos;
+using LeaderBoard.ReadThrough.Shared;
 using LeaderBoard.SharedKernel.Application.Models;
 using MediatR;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -8,22 +9,23 @@ namespace LeaderBoard.ReadThrough.PlayerScores.Features.GettingRangeScoresAndRan
 
 public static class GetRangeScoresAndRanksEndpoint
 {
-    internal static RouteHandlerBuilder MapGetRangeScoresAndRanks(
+    internal static RouteHandlerBuilder MapGetRangeScoresAndRanksEndpoint(
         this IEndpointRouteBuilder routeBuilder
     )
     {
         return routeBuilder
             .MapGet("range", Handle)
-            .WithTags(nameof(PlayerScoreReadModel).Pluralize())
-            .WithName("GetRangeScoresAndRanks");
+            .WithTags(nameof(PlayerScores))
+            .WithName(nameof(GetRangeScoresAndRanks));
 
         static async Task<Results<Ok<IList<PlayerScoreDto>>, ValidationProblem>> Handle(
             [AsParameters] GetRangeScoresAndRanksRequestParameter requestParameters
         )
         {
-            var (mediator, cancellationToken, leaderboardName, start, end) = requestParameters;
+            var (mediator, cancellationToken, leaderboardName, start, end, isDesc) =
+                requestParameters;
             var res = await mediator.Send(
-                new GetRangeScoresAndRanks(leaderboardName, start, end),
+                new GetRangeScoresAndRanks(leaderboardName, start, end, isDesc),
                 cancellationToken
             );
 
@@ -36,6 +38,7 @@ public static class GetRangeScoresAndRanksEndpoint
         CancellationToken CancellationToken,
         string LeaderBoardName = Constants.GlobalLeaderBoard,
         int Start = 0,
-        int End = 9
+        int End = 9,
+        bool IsDesc = true
     );
 }

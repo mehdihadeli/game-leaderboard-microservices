@@ -30,6 +30,7 @@ namespace LeaderBoard.DbMigrator.Migrations.LeaderBoard
                         .HasColumnName("player_id");
 
                     b.Property<string>("Country")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("country");
@@ -39,11 +40,13 @@ namespace LeaderBoard.DbMigrator.Migrations.LeaderBoard
                         .HasColumnName("created_at");
 
                     b.Property<string>("FirstName")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
                         .HasColumnName("first_name");
 
                     b.Property<string>("LastName")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
                         .HasColumnName("last_name");

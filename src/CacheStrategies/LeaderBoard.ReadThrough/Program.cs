@@ -2,16 +2,14 @@ using System.Reflection;
 using Humanizer;
 using LeaderBoard.DbMigrator;
 using LeaderBoard.ReadThrough;
-using LeaderBoard.ReadThrough.Data;
-using LeaderBoard.ReadThrough.Extensions.WebApplicationBuilderExtensions;
 using LeaderBoard.ReadThrough.PlayerScores.Features.GettingGlobalScoreAndRank;
-using LeaderBoard.ReadThrough.PlayerScores.Features.GettingPlayerGroupScoresAndRanks;
+using LeaderBoard.ReadThrough.PlayerScores.Features.GettingPlayerGroupGlobalScoresAndRanks;
 using LeaderBoard.ReadThrough.PlayerScores.Features.GettingRangeScoresAndRanks;
-using LeaderBoard.ReadThrough.Providers;
-using LeaderBoard.ReadThrough.Services;
+using LeaderBoard.ReadThrough.Shared.Extensions.WebApplicationBuilderExtensions;
+using LeaderBoard.ReadThrough.Shared.Providers;
+using LeaderBoard.ReadThrough.Shared.Services;
 using LeaderBoard.SharedKernel.Application.Data.EFContext;
 using LeaderBoard.SharedKernel.Application.Models;
-using LeaderBoard.SharedKernel.Contracts.Data;
 using LeaderBoard.SharedKernel.Core.Extensions.ServiceCollectionExtensions;
 using LeaderBoard.SharedKernel.Postgres;
 using LeaderBoard.SharedKernel.Redis;
@@ -74,13 +72,15 @@ try
     builder.Services.AddSwaggerGen();
 
     builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+    builder.Services.AddMediatR(
+        c => c.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly())
+    );
 
     builder.AddCustomRedis();
 
     builder.AddPostgresDbContext<LeaderBoardReadDbContext>(
         migrationAssembly: typeof(MigrationRootMetadata).Assembly
     );
-    builder.Services.AddTransient<ISeeder, DataSeeder>();
 
     builder.Services.AddScoped<IReadThrough, ReadThrough>();
     builder.Services.AddScoped<IReadProviderDatabase, PostgresReadProviderDatabase>();
@@ -100,12 +100,11 @@ try
 
     app.UseSerilogRequestLogging();
 
-    app.UseHttpsRedirection();
-
-    var scoreGroup = app.MapGroup("global-board/scores").WithTags(nameof(PlayerScoreReadModel).Pluralize());
-    scoreGroup.MapGetRangeScoresAndRanks();
+    var scoreGroup = app.MapGroup("global-board/scores")
+        .WithTags(nameof(PlayerScoreReadModel).Pluralize());
+    scoreGroup.MapGetRangeScoresAndRanksEndpoint();
     scoreGroup.MapGetGlobalScoreAndRank();
-    scoreGroup.MapGetPlayerGroupScoresAndRanks();
+    scoreGroup.MapGetPlayerGroupGlobalScoresAndRanksEndpoints();
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
@@ -116,12 +115,9 @@ try
 
     using (var scope = app.Services.CreateScope())
     {
-        var leaderBoardDbContext = scope.ServiceProvider.GetRequiredService<LeaderBoardReadDbContext>();
+        var leaderBoardDbContext =
+            scope.ServiceProvider.GetRequiredService<LeaderBoardReadDbContext>();
         await leaderBoardDbContext.Database.MigrateAsync();
-
-        var seeders = scope.ServiceProvider.GetServices<ISeeder>();
-        foreach (var seeder in seeders)
-            await seeder.SeedAsync();
     }
 
     app.Run();

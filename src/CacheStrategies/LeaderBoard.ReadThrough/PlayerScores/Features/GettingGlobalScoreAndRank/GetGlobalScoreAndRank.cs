@@ -1,5 +1,6 @@
 using LeaderBoard.ReadThrough.PlayerScores.Dtos;
-using LeaderBoard.ReadThrough.Services;
+using LeaderBoard.ReadThrough.Shared;
+using LeaderBoard.ReadThrough.Shared.Services;
 using LeaderBoard.SharedKernel.Core.Extensions;
 using MediatR;
 
@@ -7,11 +8,12 @@ namespace LeaderBoard.ReadThrough.PlayerScores.Features.GettingGlobalScoreAndRan
 
 internal record GetGlobalScoreAndRank(
     string PlayerId,
-    string LeaderBoardName = Constants.GlobalLeaderBoard
-) : IRequest<PlayerScoreDto?>;
+    string LeaderBoardName = Constants.GlobalLeaderBoard,
+    bool IsDesc = true
+) : IRequest<PlayerScoreWithNeighborsDto?>;
 
 internal class GetGlobalScoreAndRankHandler
-    : IRequestHandler<GetGlobalScoreAndRank, PlayerScoreDto?>
+    : IRequestHandler<GetGlobalScoreAndRank, PlayerScoreWithNeighborsDto?>
 {
     private readonly IReadThrough _readThrough;
 
@@ -20,18 +22,17 @@ internal class GetGlobalScoreAndRankHandler
         _readThrough = readThrough;
     }
 
-    public async Task<PlayerScoreDto?> Handle(
+    public async Task<PlayerScoreWithNeighborsDto?> Handle(
         GetGlobalScoreAndRank request,
         CancellationToken cancellationToken
     )
     {
         request.NotBeNull();
-        bool isDesc = true;
 
         return await _readThrough.GetGlobalScoreAndRank(
             request.LeaderBoardName,
             request.PlayerId,
-            isDesc,
+            request.IsDesc,
             cancellationToken
         );
     }
