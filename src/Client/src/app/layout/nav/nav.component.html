@@ -1,0 +1,116 @@
+<div>
+  <!-- <nav class="navbar navbar-dark bg-dark navbar-expand-lg fixed-top">
+    <div class="container">
+      <a routerLink="/" class="navbar-brand">
+        <fa-icon [icon]="fa.bolt"></fa-icon>
+        <span class="nga-logo mx-1">{{ this.logoName }}</span>
+      </a>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#navbarCollapse"
+        aria-controls="navbarCollapse"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarCollapse">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a
+              *ngFor="let item of navItems"
+              class="nav-item nav-link"
+              [routerLink]="item.link"
+              ><fa-icon [icon]="item.icon"></fa-icon> {{ item.title }}</a
+            >
+          </li>
+        </ul>
+        <form class="d-flex">
+          <div *ngIf="loginResponse">
+            <button class="btn btn-link nav-item nav-link" (click)="logout()">
+              <span> {{ loginResponse.userName }}</span>
+
+              <fa-icon [icon]="fa.signout"></fa-icon> Logout
+            </button>
+          </div>
+
+          <div>
+            <button
+              class="btn btn-success my-2 mx-2 mx-sm-2 my-sm-0 pr-2"
+              type="submit"
+              routerLink="/signup"
+            >
+              <fa-icon [icon]="fa.signup"></fa-icon> Sign up
+            </button>
+            <button
+              class="btn btn-success my-2 mx-2 mx-sm-2 my-sm-0"
+              type="submit"
+              routerLink="/login"
+            >
+              <fa-icon [icon]="fa.signin"></fa-icon> Login
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </nav> -->
+
+  <nav class="navbar navbar-expand-lg navbar-light bg-light p-4">
+    <a class="navbar-brand" href="#">Navbar</a>
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-toggle="collapse"
+      data-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item" *ngFor="let item of navItems">
+          <a class="nav-link" [routerLink]="item.link">
+            <fa-icon [icon]="item.icon"></fa-icon> {{ item.title }}
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="d-flex">
+      <div *ngIf="loginResponse">
+        <span>
+          <fa-icon [icon]="fa.user"></fa-icon> {{ loginResponse.userName }}
+        </span>
+
+        <button
+          class="btn btn-danger my-2 mx-2 mx-sm-2 my-sm-0 pr-2"
+          (click)="logout()"
+        >
+          <fa-icon [icon]="fa.signout"></fa-icon> Logout
+        </button>
+      </div>
+
+      <div *ngIf="!loginResponse">
+        <button
+          class="btn btn-success my-2 mx-2 mx-sm-2 my-sm-0 pr-2"
+          type="submit"
+          routerLink="players/register"
+        >
+          <fa-icon [icon]="fa.signup"></fa-icon> Sign up
+        </button>
+        <button
+          class="btn btn-success my-2 mx-2 mx-sm-2 my-sm-0"
+          type="submit"
+          routerLink="accounts/login"
+        >
+          <fa-icon [icon]="fa.signin"></fa-icon> Login
+        </button>
+      </div>
+    </div>
+  </nav>
+</div>

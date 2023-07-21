@@ -1,0 +1,61 @@
+<div class="col-md-6 offset-md-3 mt-5">
+  <div class="alert alert-info">
+    Username: test<br />
+    Password: 000000
+  </div>
+  <div class="card">
+    <h4 class="card-header py-3">Login</h4>
+    <div class="card-body">
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <div class="mb-3">
+          <label class="form-label">Username</label>
+          <input
+            type="text"
+            formControlName="username"
+            class="form-control"
+            [class]="{
+              'is-invalid': submitted && loginForm.get('username')?.errors
+            }"
+          />
+          <div
+            *ngIf="submitted && loginForm.get('username')?.errors"
+            class="invalid-feedback"
+          >
+            <div *ngIf="loginForm.get('username')?.errors">
+              Username is required
+            </div>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Password</label>
+          <input
+            type="password"
+            formControlName="password"
+            class="form-control"
+            [class]="{
+              'is-invalid': submitted && loginForm.get('password')?.errors
+            }"
+          />
+          <div
+            *ngIf="submitted && loginForm.get('password')?.errors"
+            class="invalid-feedback"
+          >
+            <div *ngIf="loginForm.get('password')?.errors">
+              Password is required
+            </div>
+          </div>
+        </div>
+        <button [disabled]="loading" class="btn btn-primary">
+          <span
+            *ngIf="loading"
+            class="spinner-border spinner-border-sm mr-1"
+          ></span>
+          Login
+        </button>
+        <div *ngIf="error" class="alert alert-danger mt-3 mb-0">
+          {{ error }}
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

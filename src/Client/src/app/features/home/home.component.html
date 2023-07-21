@@ -1,0 +1,21 @@
+<div class="card mt-4">
+  <h4 class="card-header py-3">User Profile</h4>
+  <div class="card-body">
+    <h6>User from secure api end point</h6>
+    <div *ngIf="loading" class="spinner-border spinner-border-sm"></div>
+    <ul *ngIf="userDetails" class="list-group">
+      <li class="list-group-item">
+        <strong>Username : </strong>{{ this.userDetails.userName }}
+      </li>
+      <li class="list-group-item">
+        <strong>FirstName : </strong>{{ this.userDetails.firstName }}
+      </li>
+      <li class="list-group-item">
+        <strong>LastName : </strong>{{ this.userDetails.lastName }}
+      </li>
+      <li class="list-group-item">
+        <strong>Email : </strong>{{ userDetails.email }}
+      </li>
+    </ul>
+  </div>
+</div>

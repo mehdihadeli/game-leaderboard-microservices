@@ -1,0 +1,11 @@
+//https://juristr.com/blog/2019/08/dynamically-load-css-angular-cli/
+//https://dev.to/danywalls/how-to-simplify-and-clean-your-sass-import-with-angular-json-57pg
+
+// Import Bootstrap SCSS
+@import "bootstrap/scss/bootstrap";
+
+// https://github.com/scttcper/ngx-toastr#setup
+@import "ngx-toastr/toastr-bs5-alert";
+
+// Import Material SCSS
+// @use "@angular/material";
