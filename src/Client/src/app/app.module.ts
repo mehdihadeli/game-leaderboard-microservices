@@ -1,12 +1,8 @@
-import { APP_INITIALIZER, NgModule } from '@angular/core';
+import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { SignalRService } from './core/services/signalr.service';
-import { RegistrationComponent } from './features/players/registration/registration.component';
-import { LoginComponent } from './features/accounts/login/login.component';
-import { HomeComponent } from './features/home/home.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { ToastrModule } from 'ngx-toastr';
@@ -63,14 +59,6 @@ import { CommonModule } from '@angular/common';
     FormsModule,
   ],
   providers: [
-    {
-      provide: APP_INITIALIZER,
-      useFactory: (signalrService: SignalRService) => () => {
-        signalrService.initiateSignalrConnection();
-      },
-      deps: [SignalRService],
-      multi: true,
-    },
     { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
   ],

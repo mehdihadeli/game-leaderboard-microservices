@@ -4,6 +4,7 @@ using LeaderBoard.GameEventsProcessor.Shared;
 using LeaderBoard.GameEventsProcessor.Shared.Clients.ReadThrough;
 using LeaderBoard.GameEventsProcessor.Shared.Services;
 using LeaderBoard.SharedKernel.Application.Models;
+using LeaderBoard.SharedKernel.Core.Exceptions;
 using LeaderBoard.SharedKernel.Core.Extensions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -107,15 +108,15 @@ internal class GetGlobalScoreAndRankHandler
                         playerScore.Score,
                         request.LeaderBoardName,
                         rank,
-                        playerScore.Country,
                         playerScore.FirstName,
-                        playerScore.LastName
+                        playerScore.LastName,
+                        playerScore.Country
                     ),
                     nextMember
                 );
             }
 
-            return null;
+            throw new NotFoundException("PlayerScore not found");
         }
         else
         {
@@ -145,9 +146,9 @@ internal class GetGlobalScoreAndRankHandler
                     score ?? 0,
                     request.LeaderBoardName,
                     rank ?? 1,
-                    detail?.Country ?? string.Empty,
                     detail?.FirstName ?? string.Empty,
-                    detail?.LastName ?? string.Empty
+                    detail?.LastName ?? string.Empty,
+                    detail?.Country ?? string.Empty
                 ),
                 nextMember
             );

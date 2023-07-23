@@ -64,7 +64,7 @@ public class ReadThrough : IReadThrough
 
             if (data.Count == 0)
             {
-                return null;
+                return new List<PlayerScoreDto>();
             }
 
             return data.Select(
@@ -74,9 +74,9 @@ public class ReadThrough : IReadThrough
                             x.Score,
                             leaderBoardName,
                             Rank: i == 0 ? startRank : startRank += counter,
-                            x.Country,
                             x.FirstName,
-                            x.LeaderBoardName
+                            x.LastName,
+                            x.Country
                         )
                 )
                 .ToList();
@@ -100,9 +100,9 @@ public class ReadThrough : IReadThrough
                 sortedsetItem.Score,
                 leaderBoardName,
                 startRank,
-                detail?.Country,
                 detail?.FirstName,
-                detail?.LastName
+                detail?.LastName,
+                detail?.Country
             );
             playerScores.Add(playerScore);
 
@@ -162,15 +162,15 @@ public class ReadThrough : IReadThrough
                         playerScore.Score,
                         leaderBoardName,
                         rank,
-                        playerScore.Country,
                         playerScore.FirstName,
-                        playerScore.LastName
+                        playerScore.LastName,
+                        playerScore.Country
                     ),
                     nextMember
                 );
             }
 
-            return null;
+            throw new NotFoundException("PlayerScore not found");
         }
         else
         {
@@ -193,9 +193,9 @@ public class ReadThrough : IReadThrough
                     (double)score,
                     leaderBoardName,
                     rank,
-                    detail?.Country,
                     detail?.FirstName,
-                    detail?.LastName
+                    detail?.LastName,
+                    detail?.Country
                 ),
                 nextMember
             );
@@ -366,9 +366,9 @@ public class ReadThrough : IReadThrough
             sortedsetItem.Score,
             leaderBoardName,
             nextRank,
-            detail?.Country ?? string.Empty,
             detail?.FirstName ?? string.Empty,
-            detail?.LastName ?? string.Empty
+            detail?.LastName ?? string.Empty,
+            detail?.Country ?? string.Empty
         );
 
         return playerScore;
@@ -421,9 +421,9 @@ public class ReadThrough : IReadThrough
             sortedsetItem.Score,
             leaderBoardName,
             nextRank,
-            detail?.Country ?? string.Empty,
             detail?.FirstName ?? string.Empty,
-            detail?.LastName ?? string.Empty
+            detail?.LastName ?? string.Empty,
+            detail?.Country ?? string.Empty
         );
 
         return playerScore;
@@ -476,9 +476,9 @@ public class ReadThrough : IReadThrough
             sortedsetItem.Score,
             leaderBoardName,
             previousRank,
-            detail?.Country ?? string.Empty,
             detail?.FirstName ?? string.Empty,
-            detail?.LastName ?? string.Empty
+            detail?.LastName ?? string.Empty,
+            detail?.Country ?? string.Empty
         );
 
         return playerScore;
@@ -522,9 +522,9 @@ public class ReadThrough : IReadThrough
             sortedsetItem.Score,
             leaderBoardName,
             nextRank,
-            detail?.Country ?? string.Empty,
             detail?.FirstName ?? string.Empty,
-            detail?.LastName ?? string.Empty
+            detail?.LastName ?? string.Empty,
+            detail?.Country ?? string.Empty
         );
 
         return playerScore;

@@ -32,9 +32,9 @@ internal class AddOrUpdatePlayerScoreHandler : IRequestHandler<AddOrUpdatePlayer
                 request.PlayerId,
                 request.Score,
                 request.LeaderBoardName,
-                request.FirstName,
-                request.LastName,
-                request.Country
+                request.FirstName ?? String.Empty,
+                request.LastName ?? String.Empty,
+                request.Country ?? String.Empty
             ),
             cancellationToken
         );

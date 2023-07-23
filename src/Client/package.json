@@ -28,6 +28,7 @@
     "@types/signalr": "^2.4.0",
     "bootstrap": "^5.3.0",
     "bootstrap-icons": "^1.10.5",
+    "jwt-decode": "^3.1.2",
     "ngx-toastr": "^17.0.2",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",

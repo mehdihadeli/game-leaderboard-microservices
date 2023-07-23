@@ -60,10 +60,28 @@ public static class DatabaseExtensions
             .GetSubscriber()
             .SubscribeAsync(channelName);
 
-        var channelMessage = await channelMessageQueue.ReadAsync();
+        channelMessageQueue.OnMessage(async channelMessage =>
+        {
+            var message = JsonConvert.DeserializeObject<T>(channelMessage.Message!);
+            await handler(channelMessage.Channel!, message!);
+        });
+    }
 
-        var message = JsonConvert.DeserializeObject<T>(channelMessage.Message!);
-        await handler(channelMessage.Channel!, message!);
+    public static async Task SubscribeMessage<T>(
+        this IDatabase database,
+        string channelName,
+        Func<T, Task> handler
+    )
+    {
+        var channelMessageQueue = await database.Multiplexer
+            .GetSubscriber()
+            .SubscribeAsync(channelName);
+
+        channelMessageQueue.OnMessage(async channelMessage =>
+        {
+            var message = JsonConvert.DeserializeObject<T>(channelMessage.Message!);
+            await handler(message!);
+        });
     }
 
     public static async Task SubscribeMessage<T>(

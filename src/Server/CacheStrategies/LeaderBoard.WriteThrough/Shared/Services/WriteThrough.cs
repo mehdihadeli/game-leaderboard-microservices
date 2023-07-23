@@ -4,6 +4,7 @@ using LeaderBoard.SharedKernel.Application.Messages.PlayerScore;
 using LeaderBoard.SharedKernel.Application.Models;
 using LeaderBoard.SharedKernel.Redis;
 using LeaderBoard.WriteThrough.PlayerScore.Dtos;
+using LeaderBoard.WriteThrough.Shared.LocalRedisMessages;
 using LeaderBoard.WriteThrough.Shared.Providers;
 using StackExchange.Redis;
 
@@ -14,38 +15,11 @@ namespace LeaderBoard.WriteThrough.Shared.Services;
 //https://www.gomomento.com/blog/3-crucial-caching-choices-where-when-and-how
 public class WriteThrough : IWriteThrough
 {
-    private readonly IMapper _mapper;
     private readonly IDatabase _redisDatabase;
 
-    public WriteThrough(
-        IMapper mapper,
-        IConnectionMultiplexer redisConnection,
-        IWriteProviderDatabase eventstoredbWriteProviderDatabase
-    )
+    public WriteThrough(IConnectionMultiplexer redisConnection)
     {
-        _mapper = mapper;
         _redisDatabase = redisConnection.GetDatabase();
-
-        var channelName = $"{nameof(PlayerScoreAddOrUpdated).Underscore()}_write_through_channel";
-
-        _ = _redisDatabase.SubscribeMessage<PlayerScoreAddOrUpdated>(
-            channelName,
-            async (_, message) =>
-            {
-                // EventStoreDB
-                await eventstoredbWriteProviderDatabase.AddOrUpdatePlayerScore(
-                    new PlayerScoreDto(
-                        message.PlayerId,
-                        message.Score,
-                        message.LeaderBoardName,
-                        message.FirstName,
-                        message.LastName,
-                        message.Country
-                    ),
-                    CancellationToken.None
-                );
-            }
-        );
     }
 
     public async Task AddOrUpdatePlayerScore(
@@ -91,7 +65,7 @@ public class WriteThrough : IWriteThrough
 
         // store detail of out score-player in hashset. it is related to its score information with their same unique identifier
         var hashsetTask = redisTransaction.HashSetAsync(
-            playerScoreDto.PlayerId,
+            key,
             new HashEntry[]
             {
                 new(nameof(PlayerScoreReadModel.Country).Underscore(), playerScoreDto.Country),
@@ -100,20 +74,33 @@ public class WriteThrough : IWriteThrough
             }
         );
 
-        var @event = new PlayerScoreAddOrUpdated(
-            playerScoreDto!.PlayerId,
-            playerScoreDto.Score,
-            playerScoreDto.LeaderBoardName,
-            playerScoreDto.Country,
-            playerScoreDto.FirstName,
-            playerScoreDto.LastName
-        );
-
-        var channelName = $"{nameof(PlayerScoreAddOrUpdated).Underscore()}_write_through_channel";
-
         // phase 2: update main database through a send event to cache and subscribe to it
         // add to redis stream, to update primary database after writing to redis
-        var publishMessageTask = redisTransaction.PublishMessage(channelName, @event);
+        var publishScoreAddOrUpdatedTask = redisTransaction.PublishMessage(
+            RedisLocalAddOrUpdatePlayerMessage.ChannelName,
+            new RedisLocalAddOrUpdatePlayerMessage(
+                playerScoreDto!.PlayerId,
+                playerScoreDto.Score,
+                playerScoreDto.LeaderBoardName,
+                playerScoreDto.FirstName,
+                playerScoreDto.LastName,
+                playerScoreDto.Country
+            )
+        );
+
+        // Send a message to update ui with signalr
+        double updatedScore = (currentScore ?? 0) + playerScoreDto.Score;
+        double previousScore = currentScore ?? 0;
+        var publishScoreChangedTask = redisTransaction.PublishMessage(
+            RedisScoreChangedMessage.ChannelName,
+            new RedisScoreChangedMessage(
+                playerScoreDto.PlayerId,
+                playerScoreDto.LeaderBoardName,
+                previousScore,
+                updatedScore,
+                isDesc
+            )
+        );
 
         if (await redisTransaction.ExecuteAsync())
         {
@@ -122,7 +109,8 @@ public class WriteThrough : IWriteThrough
             rank = isDesc ? rank + 1 : rank - 1;
 
             await hashsetTask;
-            await publishMessageTask;
+            await publishScoreAddOrUpdatedTask;
+            await publishScoreChangedTask;
         }
     }
 }

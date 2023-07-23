@@ -6,7 +6,6 @@ using LeaderBoard.DbMigrator;
 using LeaderBoard.GameEventsSource;
 using LeaderBoard.GameEventsSource.Accounts.Login;
 using LeaderBoard.GameEventsSource.GameEvent.Features;
-using LeaderBoard.GameEventsSource.Players.Features.CreatingPlayer;
 using LeaderBoard.GameEventsSource.Players.Models;
 using LeaderBoard.GameEventsSource.Shared.Data.EFDbContext;
 using LeaderBoard.GameEventsSource.Shared.Extensions.WebApplicationBuilderExtensions;
@@ -21,11 +20,14 @@ using Serilog;
 using FluentValidation;
 using LeaderBoard.GameEventsSource.Accounts.GettingProfile;
 using LeaderBoard.GameEventsSource.Accounts.Logout;
+using LeaderBoard.GameEventsSource.GameEvent.Features.CreatingGameEvent;
+using LeaderBoard.GameEventsSource.Players.CreatingPlayer;
 using LeaderBoard.GameEventsSource.Shared.Services;
 using LeaderBoard.SharedKernel.Core.Extensions;
 using LeaderBoard.SharedKernel.Jwt;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Serilog.Exceptions;
 using ValidationException = LeaderBoard.SharedKernel.Core.Exceptions.ValidationException;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -60,6 +62,7 @@ builder.Host.UseSerilog(
             .Configuration(context.Configuration)
             .ReadFrom.Services(services)
             .Enrich.FromLogContext()
+            .Enrich.WithExceptionDetails()
             .WriteTo.Console();
     }
 );
@@ -190,9 +193,6 @@ app.UseCors(policyName);
 app.UseAuthentication();
 app.UseAuthorization();
 
-var playerGroup = app.MapGroup("players").WithTags(nameof(Player).Pluralize());
-playerGroup.MapCreatePlayerEndpoint();
-
 var identityGroup = app.MapGroup("accounts").WithTags("Accounts");
 identityGroup.MapLoginUserEndpoint();
 identityGroup.MapLogoutEndpoint();
@@ -200,6 +200,9 @@ identityGroup.MapGetProfileEndpoint();
 
 var gameEventGroup = app.MapGroup("game-events").WithTags("GameEvents");
 gameEventGroup.MapCreateGameEventEndpoint();
+
+var playersGroup = app.MapGroup("players").WithTags(nameof(Player).Pluralize());
+playersGroup.MapCreatePlayerEndpoint();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

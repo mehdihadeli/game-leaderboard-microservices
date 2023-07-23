@@ -24,6 +24,7 @@ import {
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
 import { AuthenticationService } from '@app/core/services';
 import { LoginResponse } from '@app/core/dtos/login-response';
+import { Router } from '@angular/router';
 
 interface NavItem {
   icon: IconDefinition;
@@ -66,7 +67,10 @@ export class NavComponent implements OnInit {
   navItems: NavItem[] = [];
   logoName: string = 'LeaderBoard';
 
-  constructor(private authenticationService: AuthenticationService) {
+  constructor(
+    private authenticationService: AuthenticationService,
+    private router: Router
+  ) {
     this.authenticationService.loginResponse.subscribe(
       (x) => (this.loginResponse = x)
     );
@@ -84,6 +88,8 @@ export class NavComponent implements OnInit {
   }
 
   logout() {
-    this.authenticationService.logout().subscribe();
+    this.authenticationService.logout().subscribe(() => {
+      this.router.navigate(['accounts/login']);
+    });
   }
 }

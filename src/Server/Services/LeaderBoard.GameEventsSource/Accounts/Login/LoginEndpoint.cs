@@ -12,7 +12,7 @@ public static class LoginEndpoint
             .WithTags(nameof(Accounts))
             .WithName(nameof(Login));
 
-        async Task<Results<Ok<LoginResponse>, ValidationProblem>> Handler(
+        async Task<Results<Ok<LoginResponse>, ValidationProblem, ProblemHttpResult>> Handler(
             [AsParameters] LoginRequestParameters requestParameters
         )
         {

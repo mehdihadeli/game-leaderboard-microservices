@@ -3,10 +3,17 @@ import { AccountsRoutingModule } from './accounts.routing';
 import { LoginComponent } from './login/login.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 
 @NgModule({
   declarations: [LoginComponent],
-  imports: [CommonModule, ReactiveFormsModule, AccountsRoutingModule],
+  imports: [
+    RouterModule,
+    FormsModule,
+    CommonModule,
+    ReactiveFormsModule,
+    AccountsRoutingModule,
+  ],
   exports: [],
   providers: [],
 })

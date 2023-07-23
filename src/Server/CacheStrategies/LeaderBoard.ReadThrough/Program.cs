@@ -16,11 +16,13 @@ using LeaderBoard.SharedKernel.Redis;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Events;
+using Serilog.Exceptions;
 
 // https://github.com/serilog/serilog-aspnetcore#two-stage-initialization
 Log.Logger = new LoggerConfiguration().MinimumLevel
     .Override("Microsoft", LogEventLevel.Information)
     .Enrich.FromLogContext()
+    .Enrich.WithExceptionDetails()
     .WriteTo.Console()
     .CreateBootstrapLogger();
 

@@ -1,5 +1,6 @@
 using Bogus;
 using LeaderBoard.GameEventsSource.GameEvent.Features;
+using LeaderBoard.GameEventsSource.GameEvent.Features.CreatingGameEvent;
 using LeaderBoard.GameEventsSource.Shared.Data.EFDbContext;
 using MediatR;
 using Microsoft.Extensions.Options;
@@ -45,7 +46,7 @@ public class GameEventsWorker : BackgroundService
             if (randomPlayer is null)
                 continue;
 
-            var score = new Faker().Random.Double(1, 9999);
+            var score = new Faker().Random.Double(1, 100);
 
             await mediator.Send(
                 new CreateGameEvent(

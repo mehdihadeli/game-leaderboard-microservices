@@ -9,9 +9,12 @@ using LeaderBoard.GameEventsProcessor.PlayerScores.Features.GettingRangeScoresAn
 using LeaderBoard.GameEventsProcessor.Shared;
 using LeaderBoard.GameEventsProcessor.Shared.Data;
 using LeaderBoard.GameEventsProcessor.Shared.Extensions.WebApplicationBuilderExtensions;
+using LeaderBoard.GameEventsProcessor.Shared.LocalRedisMessage;
 using LeaderBoard.GameEventsProcessor.Shared.Services;
 using LeaderBoard.GameEventsProcessor.Shared.Workers;
 using LeaderBoard.SharedKernel.Application.Data.EFContext;
+using LeaderBoard.SharedKernel.Application.Messages;
+using LeaderBoard.SharedKernel.Application.Messages.PlayerScore;
 using LeaderBoard.SharedKernel.Application.Models;
 using LeaderBoard.SharedKernel.Bus;
 using LeaderBoard.SharedKernel.Contracts.Data;
@@ -29,11 +32,14 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Polly;
 using Serilog;
 using Serilog.Events;
+using Serilog.Exceptions;
+using StackExchange.Redis;
 
 // https://github.com/serilog/serilog-aspnetcore#two-stage-initialization
 Log.Logger = new LoggerConfiguration().MinimumLevel
     .Override("Microsoft", LogEventLevel.Information)
     .Enrich.FromLogContext()
+    .Enrich.WithExceptionDetails()
     .WriteTo.Console()
     .CreateBootstrapLogger();
 
@@ -200,6 +206,53 @@ try
         foreach (var seeder in seeders)
             await seeder.SeedAsync();
     }
+
+    var redisDatabase = app.Services.GetRequiredService<IConnectionMultiplexer>().GetDatabase();
+
+    // publish to use in the signalr real-time notification
+    await redisDatabase.SubscribeMessage<RedisScoreChangedMessage>(
+        RedisScoreChangedMessage.ChannelName,
+        async (chanName, message) =>
+        {
+            using var scope = app.Services.CreateScope();
+            var busPublisher = scope.ServiceProvider.GetRequiredService<IBusPublisher>();
+
+            var rangeMembersToNotifyTask = redisDatabase.SortedSetRangeByScoreAsync(
+                message.LeaderBoardName,
+                message.PreviousScore,
+                message.UpdatedScore,
+                exclude: Exclude.None,
+                order: message.IsDesc ? Order.Descending : Order.Ascending
+            );
+
+            var rangeMembersToNotify = await rangeMembersToNotifyTask;
+
+            var playerIds = rangeMembersToNotify.Select(x => x.ToString().Split(":")[1]).ToList();
+
+            if (playerIds.Any())
+                await busPublisher.Publish(new PlayersRankAffected(playerIds));
+        }
+    );
+
+    await redisDatabase.SubscribeMessage<RedisLocalAddOrUpdatePlayerMessage>(
+        RedisLocalAddOrUpdatePlayerMessage.ChannelName,
+        async (_, message) =>
+        {
+            using var scope = app.Services.CreateScope();
+            var busPublisher = scope.ServiceProvider.GetRequiredService<IBusPublisher>();
+
+            var playerScoreAdded = new PlayerScoreAddOrUpdated(
+                message!.PlayerId,
+                message.Score,
+                message.LeaderBoardName,
+                message.FirstName,
+                message.LastName,
+                message.Country
+            );
+
+            await busPublisher.Publish(playerScoreAdded);
+        }
+    );
 
     app.Run();
 }

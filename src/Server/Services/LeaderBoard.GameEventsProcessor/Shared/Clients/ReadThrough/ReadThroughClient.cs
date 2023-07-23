@@ -1,6 +1,7 @@
 using AutoMapper;
 using LeaderBoard.GameEventsProcessor.PlayerScores.Dtos;
 using LeaderBoard.GameEventsProcessor.Shared.Clients.ReadThrough.Dtos;
+using LeaderBoard.SharedKernel.Core.Exceptions;
 using LeaderBoard.SharedKernel.Core.Extensions;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Options;
@@ -34,12 +35,12 @@ public class ReadThroughClient : IReadThroughClient
     {
         // https://stackoverflow.com/a/67877742/581476
         var qb = new QueryBuilder
-                 {
-                     { nameof(start), start.ToString() },
-                     { nameof(end), end.ToString() },
-                     { nameof(leaderBoardName), leaderBoardName },
-                     { nameof(isDesc), isDesc.ToString() },
-                 };
+        {
+            { nameof(start), start.ToString() },
+            { nameof(end), end.ToString() },
+            { nameof(leaderBoardName), leaderBoardName },
+            { nameof(isDesc), isDesc.ToString() },
+        };
 
         // https://github.com/App-vNext/Polly#handing-return-values-and-policytresult
         var httpResponse = await _httpClient.GetAsync(
@@ -67,31 +68,41 @@ public class ReadThroughClient : IReadThroughClient
         CancellationToken cancellationToken = default
     )
     {
-        // https://stackoverflow.com/a/67877742/581476
-        var qb = new QueryBuilder
+        try
         {
-            { nameof(leaderBoardName), leaderBoardName },
-            { nameof(isDesc), isDesc.ToString() },
-        };
+            // https://stackoverflow.com/a/67877742/581476
+            var qb = new QueryBuilder
+            {
+                { nameof(leaderBoardName), leaderBoardName },
+                { nameof(isDesc), isDesc.ToString() },
+            };
 
-        // https://github.com/App-vNext/Polly#handing-return-values-and-policytresult
-        var httpResponse = await _httpClient.GetAsync(
-            $"{_readThroughHttpClientOptions.PlayersScoreEndpoint}/players/{playerId}?{qb.ToQueryString().Value}",
-            cancellationToken
-        );
-
-        // https://stackoverflow.com/questions/21097730/usage-of-ensuresuccessstatuscode-and-handling-of-httprequestexception-it-throws
-        // throw HttpResponseException instead of HttpRequestException (because we want detail response exception) with corresponding status code
-        await httpResponse.EnsureSuccessStatusCodeWithDetailAsync();
-
-        var playerScoreDto =
-            await httpResponse.Content.ReadFromJsonAsync<PlayerScoreWithNeighborsClientDto>(
-                cancellationToken: cancellationToken
+            // https://github.com/App-vNext/Polly#handing-return-values-and-policytresult
+            var httpResponse = await _httpClient.GetAsync(
+                $"{_readThroughHttpClientOptions.PlayersScoreEndpoint}/players/{playerId}?{qb.ToQueryString().Value}",
+                cancellationToken
             );
 
-        var dto = _mapper.Map<PlayerScoreWithNeighborsDto>(playerScoreDto);
+            // https://stackoverflow.com/questions/21097730/usage-of-ensuresuccessstatuscode-and-handling-of-httprequestexception-it-throws
+            // throw HttpResponseException instead of HttpRequestException (because we want detail response exception) with corresponding status code
+            await httpResponse.EnsureSuccessStatusCodeWithDetailAsync();
 
-        return dto;
+            var playerScoreDto =
+                await httpResponse.Content.ReadFromJsonAsync<PlayerScoreWithNeighborsClientDto>(
+                    cancellationToken: cancellationToken
+                );
+
+            var dto = _mapper.Map<PlayerScoreWithNeighborsDto>(playerScoreDto);
+
+            return dto;
+        }
+        catch (HttpResponseException e)
+        {
+            if (e.StatusCode == StatusCodes.Status404NotFound)
+                return null;
+
+            throw;
+        }
     }
 
     public async Task<List<PlayerScoreWithNeighborsDto>?> GetPlayerGroupGlobalScoresAndRanks(

@@ -1,7 +1,9 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { RegistrationComponent } from './registration/registration.component';
 import { PlayerScoreComponent } from './player-score/player-score.component';
+import { AuthGuard } from '@app/core/guards';
+import { CreatePlayerComponent } from './create-player/create-player.component';
+import { NoAuthGuard } from '@app/core/guards/no-auth.guard';
 
 export const routes: Routes = [
   {
@@ -12,10 +14,12 @@ export const routes: Routes = [
   {
     path: 'player-score',
     component: PlayerScoreComponent,
+    canActivate: [AuthGuard],
   },
   {
-    path: 'register',
-    component: RegistrationComponent,
+    path: 'create',
+    component: CreatePlayerComponent,
+    canActivate: [NoAuthGuard],
   },
 ];
 

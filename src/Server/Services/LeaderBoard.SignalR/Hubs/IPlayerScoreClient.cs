@@ -1,3 +1,5 @@
+using LeaderBoard.SignalR.Dto;
+
 namespace LeaderBoard.SignalR.Hubs;
 
 // We also have communication the other way i.e. server-to-client. For this, we create interface representing the client and the things it will listen for.
@@ -5,4 +7,6 @@ namespace LeaderBoard.SignalR.Hubs;
 public interface IPlayerScoreClient
 {
     Task HelloClient(string message);
+    Task UpdatePlayerScoreForClient(PlayerScoreWithNeighborsDto playerScoreWithNeighborsDto);
+    Task InitialPlayerScoreForClient(PlayerScoreWithNeighborsDto? playerScoreWithNeighborsDto);
 }

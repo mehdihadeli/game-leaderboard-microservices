@@ -3,7 +3,7 @@ using LeaderBoard.SharedKernel.Bus;
 using LeaderBoard.SharedKernel.Core.Extensions;
 using MediatR;
 
-namespace LeaderBoard.GameEventsSource.GameEvent.Features;
+namespace LeaderBoard.GameEventsSource.GameEvent.Features.CreatingGameEvent;
 
 public record CreateGameEvent(
     Guid PlayerId,

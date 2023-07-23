@@ -1,4 +1,4 @@
-using LeaderBoard.WriteBehind.Services.WriteBehindStrategies;
+using LeaderBoard.WriteBehind.Shared.Services.WriteBehindStrategies;
 using StackExchange.Redis;
 
 namespace LeaderBoard.WriteBehind;

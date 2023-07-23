@@ -2,5 +2,6 @@ namespace LeaderBoard.SignalR.Hubs;
 
 public interface IHubService
 {
-	void SendHelloToClients();
+    void SendHelloToClients();
+    Task UpdatePlayersScoreForClient(IEnumerable<string> players);
 }

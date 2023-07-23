@@ -1,13 +1,20 @@
 import { NgModule } from '@angular/core';
 import { PlayersRoutingModule } from './players.routing';
 import { CommonModule } from '@angular/common';
-import { RegistrationComponent } from './registration/registration.component';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { PlayerScoreComponent } from './player-score/player-score.component';
+import { CreatePlayerComponent } from './create-player/create-player.component';
+import { RouterModule } from '@angular/router';
 
 @NgModule({
-  declarations: [RegistrationComponent, PlayerScoreComponent],
-  imports: [CommonModule, ReactiveFormsModule, PlayersRoutingModule],
+  declarations: [PlayerScoreComponent, CreatePlayerComponent],
+  imports: [
+    RouterModule,
+    FormsModule,
+    CommonModule,
+    ReactiveFormsModule,
+    PlayersRoutingModule,
+  ],
   exports: [],
   providers: [],
 })

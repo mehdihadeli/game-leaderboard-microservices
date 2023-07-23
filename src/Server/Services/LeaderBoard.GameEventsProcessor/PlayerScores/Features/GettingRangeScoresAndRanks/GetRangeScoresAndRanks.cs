@@ -97,7 +97,7 @@ internal class GetRangeScoresAndRanksHandler
 
             if (data.Count == 0)
             {
-                return null;
+                return new List<PlayerScoreDto>();
             }
 
             return data.Select(
@@ -107,18 +107,15 @@ internal class GetRangeScoresAndRanksHandler
                             x.Score,
                             request.LeaderBoardName,
                             Rank: i == 0 ? startRank : startRank += counter,
-                            x.Country,
                             x.FirstName,
-                            x.LeaderBoardName
+                            x.LastName,
+                            x.Country
                         )
                 )
                 .ToList();
         }
 
-        if (results is null)
-            return null;
-
-        foreach (var sortedsetItem in results)
+        foreach (var sortedsetItem in results!)
         {
             string key = sortedsetItem.Element;
             var playerId = key.Split(":")[1];
@@ -136,9 +133,9 @@ internal class GetRangeScoresAndRanksHandler
                 sortedsetItem.Score,
                 request.LeaderBoardName,
                 startRank,
-                detail?.Country ?? string.Empty,
                 detail?.FirstName ?? string.Empty,
-                detail?.LastName ?? string.Empty
+                detail?.LastName ?? string.Empty,
+                detail?.Country ?? string.Empty
             );
             playerScores.Add(playerScore);
 

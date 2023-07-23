@@ -1,44 +1,53 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, from } from 'rxjs';
+import { BehaviorSubject, Subject, from } from 'rxjs';
 import * as signalR from '@microsoft/signalr';
 import { environment } from 'src/environments/environment';
 import { AuthenticationService } from './authentication.service';
+import { PlayerScoreWithNeighborsDto } from '../dtos/player-score-dto';
 
 //https://mfcallahan.blog/2020/11/05/how-to-implement-signalr-in-a-net-core-angular-web-application/
 //https://code-maze.com/netcore-signalr-angular-realtime-charts/
+//https://referbruv.com/blog/how-to-use-signalr-with-asp-net-core-angular/
+//https://code-maze.com/how-to-send-client-specific-messages-using-signalr/
+//https://learn.microsoft.com/en-us/aspnet/core/signalr/javascript-client?view=aspnetcore-7.0&tabs=visual-studio
 
 @Injectable({
   providedIn: 'root',
 })
 export class SignalRService {
   connection!: signalR.HubConnection;
-  hubHelloMessage: BehaviorSubject<string>;
-  progressPercentage: BehaviorSubject<number>;
-  progressMessage: BehaviorSubject<string>;
+  hubHelloMessageSubject: BehaviorSubject<string>;
+  hubUpdatePlayerScoreSubject: Subject<PlayerScoreWithNeighborsDto>;
+  hubInitialPlayerScoreSubject: Subject<PlayerScoreWithNeighborsDto>;
   public connectionId: string = '';
 
   constructor(private authenticationService: AuthenticationService) {
-    this.hubHelloMessage = new BehaviorSubject<string>('');
-    this.progressPercentage = new BehaviorSubject<number>(0);
-    this.progressMessage = new BehaviorSubject<string>('');
-  }
+    this.hubHelloMessageSubject = new BehaviorSubject<string>('');
+    this.hubUpdatePlayerScoreSubject =
+      new Subject<PlayerScoreWithNeighborsDto>();
+    this.hubInitialPlayerScoreSubject =
+      new Subject<PlayerScoreWithNeighborsDto>();
 
-  // Establish a connection to the SignalR server hub
-  public initiateSignalrConnection(): Promise<void> {
     this.connection = new signalR.HubConnectionBuilder()
       //https://stackoverflow.com/questions/55839073/signalr-connection-with-accesstokenfactory-on-js-client-doesnt-connect-with-con
       //https://learn.microsoft.com/en-us/aspnet/core/signalr/authn-and-authz?view=aspnetcore-7.0#bearer-token-authentication
       .withUrl(environment.signalrHubUrl, {
         accessTokenFactory: async () => {
           let token = this.authenticationService.tokenValue;
-
           return token as string;
         },
       })
+      //.withAutomaticReconnect()
       .build();
 
-    this.setSignalRClientMethods();
+    // manually reconnecting
+    this.connection.onclose(async () => {
+      await this.initiateSignalrConnection();
+    });
+  }
 
+  // Establish a connection to the SignalR server hub
+  public async initiateSignalrConnection(): Promise<void> {
     let connectionPromise = this.connection
       .start()
       .then(() => this.getConnectionId())
@@ -51,14 +60,10 @@ export class SignalRService {
         console.log(`SignalR connection error: ${error}`);
       });
 
-    //https://stackoverflow.com/questions/39319279/convert-promise-to-observable
-    const connectionObservable = from(connectionPromise);
-    connectionObservable.subscribe();
-
-    return connectionPromise;
+    return await connectionPromise;
   }
 
-  private getConnectionId = () => {
+  public getConnectionId = () => {
     this.connection.invoke('getConnectionId').then((data) => {
       console.log(data);
       this.connectionId = data;
@@ -67,24 +72,64 @@ export class SignalRService {
 
   // This method will implement the methods defined in the IPlayerScoreClient interface in the LeaderBoard.SignalR.Hubs .NET solution
   // This will setup the client side methods that the server can call.
-  private setSignalRClientMethods(): void {
+  public listenToHelloClient(): void {
     this.connection.on('HelloClient', (message: string) => {
-      this.hubHelloMessage.next(message);
+      this.hubHelloMessageSubject.next(message);
     });
+  }
 
-    this.connection.on('GetMessage', async () => {
-      let promise = new Promise((resolve, reject) => {
-        resolve('hello world!');
+  public listenToUpdatePlayerScoreForClient(): void {
+    // called from signalr server
+    this.connection.on(
+      'UpdatePlayerScoreForClient',
+      (message: PlayerScoreWithNeighborsDto) => {
+        console.log(message);
+        this.hubUpdatePlayerScoreSubject.next(message);
+      }
+    );
+  }
+
+  public listenToInitialPlayerScoreForClient(): void {
+    // called from signalr server
+    this.connection.on(
+      'InitialPlayerScoreForClient',
+      (message: PlayerScoreWithNeighborsDto) => {
+        console.log(message);
+        this.hubInitialPlayerScoreSubject.next(message);
+      }
+    );
+  }
+
+  public getCurrentPlayerScoreFromServer(): void {
+    // send message to signalr server
+    // invoke method wait for return result, but send method doesn't wait for return value
+    this.connection
+      .invoke('GetCurrentPlayerScoreFromServer')
+      .catch((error: any) => {
+        console.log(`GetCurrentPlayerScoreFromServer() error: ${error}`);
+        alert(
+          'GetCurrentPlayerScoreFromServer() error!, see console for details.'
+        );
       });
-      return promise;
-    });
+  }
 
-    this.connection.on('UpdateProgressBar', (percentage: number) => {
-      this.progressPercentage.next(percentage);
-    });
+  public helloWithConnectionFromServer(): void {
+    // send message to signalr server
+    this.connection
+      .invoke('HelloWithConnectionFromServer', this.connectionId)
+      .catch((error: any) => {
+        console.log(`HelloWithConnectionFromServer() error: ${error}`);
+        alert(
+          'HelloWithConnectionFromServer() error!, see console for details.'
+        );
+      });
+  }
 
-    this.connection.on('DisplayProgressMessage', (message: string) => {
-      this.progressMessage.next(message);
+  public helloFromServer(): void {
+    // send message to signalr server
+    this.connection.invoke('HelloFromServer').catch((error: any) => {
+      console.log(`HelloFromServer() error: ${error}`);
+      alert('HelloFromServer() error!, see console for details.');
     });
   }
 }

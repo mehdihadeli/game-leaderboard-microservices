@@ -7,6 +7,9 @@ import { environment } from '@environments/environment';
 import { UserProfileResponse } from '../dtos/user-profile';
 import { LoginRequest } from '../dtos/login-request';
 import { LoginResponse } from '../dtos/login-response';
+import jwtDecode from 'jwt-decode';
+
+//https://techincent.com/angular-jwt-auth/
 
 @Injectable({ providedIn: 'root' })
 export class AuthenticationService {
@@ -23,8 +26,8 @@ export class AuthenticationService {
     this.accountsBaseAddress = `${environment.apiUrl}/accounts`;
   }
 
-  public get tokenValue(): string | undefined {
-    return this.loginResponseSubject.value?.token;
+  public get tokenValue(): string | null {
+    return this.loginResponseSubject.value?.token ?? null;
   }
 
   login(loginRequest: LoginRequest): Observable<LoginResponse> {
@@ -59,8 +62,33 @@ export class AuthenticationService {
       null
     );
 
-    this.router.navigate(['accounts/login']);
-
     return observable;
+  }
+
+  get isAuthenticated(): boolean {
+    return this.isAuthTokenValid(this.tokenValue ?? '');
+  }
+
+  isAuthTokenValid(token: string): boolean {
+    if (this.isNullOrEmpty(token)) {
+      return false;
+    }
+    const decoded: any = jwtDecode(token);
+    // default decoded exp format is second
+    const expMilSecond: number = decoded?.exp * 1000; // milliseconds
+    const currentTime = Date.now(); // milliseconds
+    if (expMilSecond < currentTime) {
+      return false;
+    }
+    return true;
+  }
+
+  getUserDataFromToken(token: string): any {
+    const decoded: any = jwtDecode(token);
+    return decoded.data;
+  }
+
+  isNullOrEmpty(str: string | null | undefined): boolean {
+    return str === null || str === undefined || str === '';
   }
 }

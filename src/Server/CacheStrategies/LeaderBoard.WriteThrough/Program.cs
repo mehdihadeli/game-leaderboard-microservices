@@ -2,28 +2,38 @@ using System.Reflection;
 using Humanizer;
 using LeaderBoard.DbMigrator;
 using LeaderBoard.SharedKernel.Application.Data.EFContext;
+using LeaderBoard.SharedKernel.Application.Messages;
+using LeaderBoard.SharedKernel.Application.Messages.PlayerScore;
 using LeaderBoard.SharedKernel.Application.Models;
+using LeaderBoard.SharedKernel.Bus;
 using LeaderBoard.SharedKernel.Contracts.Domain.Events;
+using LeaderBoard.SharedKernel.Core.Exceptions;
 using LeaderBoard.SharedKernel.Domain.Events;
 using LeaderBoard.SharedKernel.EventStoreDB.Extensions;
 using LeaderBoard.SharedKernel.OpenTelemetry;
 using LeaderBoard.SharedKernel.Postgres;
 using LeaderBoard.SharedKernel.Redis;
+using LeaderBoard.WriteThrough.PlayerScore.Dtos;
 using LeaderBoard.WriteThrough.PlayerScore.Features.AddingOrUpdatingPlayerScore;
 using LeaderBoard.WriteThrough.Shared.Extensions.WebApplicationBuilderExtensions;
+using LeaderBoard.WriteThrough.Shared.LocalRedisMessages;
 using LeaderBoard.WriteThrough.Shared.Providers;
 using LeaderBoard.WriteThrough.Shared.Services;
+using MassTransit;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Polly;
 using Serilog;
 using Serilog.Events;
+using Serilog.Exceptions;
+using StackExchange.Redis;
 
 // https://github.com/serilog/serilog-aspnetcore#two-stage-initialization
 Log.Logger = new LoggerConfiguration().MinimumLevel
     .Override("Microsoft", LogEventLevel.Information)
     .Enrich.FromLogContext()
+    .Enrich.WithExceptionDetails()
     .WriteTo.Console()
     .CreateBootstrapLogger();
 
@@ -93,9 +103,49 @@ try
     builder.AddPostgresDbContext<LeaderBoardReadDbContext>(
         migrationAssembly: typeof(MigrationRootMetadata).Assembly
     );
+    builder.AddPostgresDbContext<InboxOutboxDbContext>(
+        migrationAssembly: typeof(MigrationRootMetadata).Assembly
+    );
 
     builder.Services.AddScoped<IWriteThrough, WriteThrough>();
     builder.Services.AddScoped<IWriteProviderDatabase, EventStoreWriteProviderDatabase>();
+
+    builder.Services.AddMassTransit(x =>
+    {
+        // setup masstransit for outbox and producing messages through `IPublishEndpoint`
+        x.AddEntityFrameworkOutbox<InboxOutboxDbContext>(o =>
+        {
+            o.QueryDelay = TimeSpan.FromSeconds(1);
+            o.UsePostgres();
+            o.UseBusOutbox();
+
+            o.DuplicateDetectionWindow = TimeSpan.FromSeconds(60);
+        });
+
+        x.SetKebabCaseEndpointNameFormatter();
+
+        x.UsingRabbitMq(
+            (context, cfg) =>
+            {
+                cfg.AutoStart = true;
+                cfg.ConfigureEndpoints(context);
+
+                // https://masstransit-project.com/usage/exceptions.html#retry
+                // https://markgossa.com/2022/06/masstransit-exponential-back-off.html
+                cfg.UseMessageRetry(r =>
+                {
+                    r.Exponential(
+                            3,
+                            TimeSpan.FromMilliseconds(200),
+                            TimeSpan.FromMinutes(120),
+                            TimeSpan.FromMilliseconds(200)
+                        )
+                        .Ignore<ValidationException>(); // don't retry if we have invalid data and message goes to _error queue masstransit
+                });
+            }
+        );
+    });
+    builder.Services.AddScoped<IBusPublisher, BusPublisher>();
 
     var app = builder.Build();
 
@@ -130,7 +180,60 @@ try
         var leaderBoardDbContext =
             scope.ServiceProvider.GetRequiredService<LeaderBoardReadDbContext>();
         await leaderBoardDbContext.Database.MigrateAsync();
+
+        var inboxOutboxDbContext = scope.ServiceProvider.GetRequiredService<InboxOutboxDbContext>();
+        await inboxOutboxDbContext.Database.MigrateAsync();
     }
+
+    var redisDatabase = app.Services.GetRequiredService<IConnectionMultiplexer>().GetDatabase();
+
+    // publish to use in the signalr real-time notification
+    await redisDatabase.SubscribeMessage<RedisScoreChangedMessage>(
+        RedisScoreChangedMessage.ChannelName,
+        async (chanName, message) =>
+        {
+            using var scope = app.Services.CreateScope();
+            var busPublisher = scope.ServiceProvider.GetRequiredService<IBusPublisher>();
+
+            var rangeMembersToNotifyTask = redisDatabase.SortedSetRangeByScoreAsync(
+                message.LeaderBoardName,
+                message.PreviousScore,
+                message.UpdatedScore,
+                exclude: Exclude.None,
+                order: message.IsDesc ? Order.Descending : Order.Ascending
+            );
+
+            var rangeMembersToNotify = await rangeMembersToNotifyTask;
+
+            var playerIds = rangeMembersToNotify.Select(x => x.ToString().Split(":")[1]).ToList();
+
+            if (playerIds.Any())
+                await busPublisher.Publish(new PlayersRankAffected(playerIds));
+        }
+    );
+
+    await redisDatabase.SubscribeMessage<RedisLocalAddOrUpdatePlayerMessage>(
+        RedisLocalAddOrUpdatePlayerMessage.ChannelName,
+        async (_, message) =>
+        {
+            using var scope = app.Services.CreateScope();
+
+            var eventstoredbWriteProviderDatabase =
+                scope.ServiceProvider.GetRequiredService<IWriteProviderDatabase>();
+            // EventStoreDB
+            await eventstoredbWriteProviderDatabase.AddOrUpdatePlayerScore(
+                new PlayerScoreDto(
+                    message.PlayerId,
+                    message.Score,
+                    message.LeaderBoardName,
+                    message.FirstName,
+                    message.LastName,
+                    message.Country
+                ),
+                CancellationToken.None
+            );
+        }
+    );
 
     app.Run();
 }

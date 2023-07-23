@@ -19,7 +19,8 @@ public static class Extensions
             return ConnectionMultiplexer.Connect(
                 new ConfigurationOptions
                 {
-                    EndPoints = { $"{redisOptions.Host}:{redisOptions.Port}" }
+                    EndPoints = { $"{redisOptions.Host}:{redisOptions.Port}" },
+                    AllowAdmin = true
                 }
             );
         });

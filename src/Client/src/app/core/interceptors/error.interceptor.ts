@@ -24,32 +24,36 @@ export class ErrorInterceptor implements HttpInterceptor {
   ): Observable<HttpEvent<any>> {
     return next.handle(request).pipe(
       catchError((err) => {
+        const status = err?.status;
+
         if ([401, 403].includes(err.status)) {
           // auto logout if 401 Unauthorized or 403 Forbidden response returned from api
           this.authenticationService.logout();
         }
 
-        // Check if error response body is of type ProblemDetails
-        if (err.error && typeof err.error === 'object' && 'type' in err.error) {
-          const problem = err.error as ProblemDetails;
+        const error = err.error;
+        let message = err.message;
 
+        if (typeof error === 'object') {
+          const problem = err as ProblemDetails;
+          // Check if error response body is of type ProblemDetails
           if (problem.detail && problem.status) {
             // handle ProblemDetails error
-            this.toastr.error(
-              problem.detail ?? problem.title ?? 'Unexpected error'
-            );
+            err.error.detail || err.error.exception.details;
+            message = problem.detail ?? problem.title ?? 'Unexpected error';
           } else {
-            if (err?.message) {
-              this.toastr.error(err.message);
+            const keys = Object.keys(error);
+            if (keys.some((item) => item === 'message')) {
+              message = error.message;
             }
           }
-        } else {
-          // handle other errors
-          this.toastr.error('Unexpected error', err.message);
+        } else if (typeof error === 'string') {
+          message = error;
         }
 
-        const error = err.error.detail || err.error.exception.details;
-        return throwError(error);
+        this.toastr.error(message);
+
+        return throwError({ message, status });
       })
     );
   }

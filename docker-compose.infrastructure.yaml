@@ -1,0 +1,76 @@
+version: "3.8"
+name: leaderboard
+
+services:
+  rabbitmq:
+    image: rabbitmq:management
+    pull_policy: if_not_present
+    container_name: rabbitmq
+    restart: on-failure
+    ports:
+      - ${RABBITMQ_HOST_PORT:-5672}:${RABBITMQ_PORT:-5672}
+      - ${RABBITMQ_HOST_API_PORT:-15672}:${RABBITMQ_API_PORT:-15672}
+      # volumes:
+      #   - rabbitmq:/var/lib/rabbitmq
+    networks:
+      - leaderboard
+     
+
+  postgres:
+    image: postgres:latest
+    pull_policy: if_not_present
+    container_name: postgres
+    restart: on-failure
+    ports:
+      - ${POSTGRES_HOST_PORT:-5432}:${POSTGRES_PORT:-5432}
+    #https://docs.docker.com/compose/environment-variables/env-file/#parameter-expansion
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+    networks:
+      - leaderboard
+
+  # https://developer.redis.com/howtos/quick-start
+  # redis-stack is a image with redis modules enabled like JSON module
+  redis:
+    image: redis/redis-stack:latest
+    pull_policy: if_not_present
+    restart: on-failure
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - leaderboard
+
+  # https://developers.eventstore.com/server/v21.10/installation.html#insecure-single-node
+  # https://hub.docker.com/r/eventstore/eventstore/tags
+  # https://stackoverflow.com/questions/65272764/ports-are-not-available-listen-tcp-0-0-0-0-50070-bind-an-attempt-was-made-to
+  # EVENTSTORE_MEM_DB=true, it tells the EventStoreDB container to use an in-memory database, which means that any data stored in EventStoreDB will not be persisted between container restarts. Once the container is stopped or restarted, all data will be lost.
+  eventstore:
+    image: eventstore/eventstore:latest
+    pull_policy: if_not_present
+    container_name: eventstore
+    restart: on-failure
+    environment:
+      - EVENTSTORE_CLUSTER_SIZE=1
+      - EVENTSTORE_RUN_PROJECTIONS=All
+      - EVENTSTORE_START_STANDARD_PROJECTIONS=false
+      - EVENTSTORE_EXT_TCP_PORT=1113
+      - EVENTSTORE_HTTP_PORT=2113
+      - EVENTSTORE_INSECURE=true
+      - EVENTSTORE_ENABLE_EXTERNAL_TCP=true
+      - EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP=true
+      - EVENTSTORE_MEM_DB=true
+    ports:
+      - ${EVENTSTORE_TCP_HOST_PORT:-1113}:${EVENTSTORE_TCP_PORT:-1113}
+      - ${EVENTSTORE_HOST_PORT:-2113}:${EVENTSTORE_PORT:-2113}
+    networks:
+      - leaderboard
+  
+volumes:
+  eventstore-volume-data:
+  eventstore-volume-logs:
+
+networks:
+  leaderboard:
+    name: leaderboard

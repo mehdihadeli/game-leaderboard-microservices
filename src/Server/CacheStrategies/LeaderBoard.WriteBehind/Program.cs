@@ -13,11 +13,12 @@ using LeaderBoard.SharedKernel.Postgres;
 using LeaderBoard.SharedKernel.Redis;
 using LeaderBoard.SharedKernel.Web.ProblemDetail;
 using LeaderBoard.WriteBehind;
-using LeaderBoard.WriteBehind.DatabaseProviders;
-using LeaderBoard.WriteBehind.Services.WriteBehindStrategies;
-using LeaderBoard.WriteBehind.Services.WriteBehindStrategies.Broker.Consumers;
-using LeaderBoard.WriteBehind.Services.WriteBehindStrategies.RedisPubSub;
-using LeaderBoard.WriteBehind.Services.WriteBehindStrategies.RedisStream;
+using LeaderBoard.WriteBehind.Shared;
+using LeaderBoard.WriteBehind.Shared.DatabaseProviders;
+using LeaderBoard.WriteBehind.Shared.Services.WriteBehindStrategies;
+using LeaderBoard.WriteBehind.Shared.Services.WriteBehindStrategies.Broker.Consumers;
+using LeaderBoard.WriteBehind.Shared.Services.WriteBehindStrategies.RedisPubSub;
+using LeaderBoard.WriteBehind.Shared.Services.WriteBehindStrategies.RedisStream;
 using MassTransit;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -25,11 +26,13 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Polly;
 using Serilog;
 using Serilog.Events;
+using Serilog.Exceptions;
 
 // https://github.com/serilog/serilog-aspnetcore#two-stage-initialization
 Log.Logger = new LoggerConfiguration().MinimumLevel
     .Override("Microsoft", LogEventLevel.Information)
     .Enrich.FromLogContext()
+    .Enrich.WithExceptionDetails()
     .WriteTo.Console()
     .CreateBootstrapLogger();
 
@@ -119,6 +122,7 @@ try
         x.AddEntityFrameworkOutbox<InboxOutboxDbContext>(o =>
         {
             o.UsePostgres();
+            o.UseBusOutbox();
 
             o.DuplicateDetectionWindow = TimeSpan.FromSeconds(60);
         });
@@ -162,7 +166,8 @@ try
 
     using (var scope = app.Services.CreateScope())
     {
-        var leaderBoardDbContext = scope.ServiceProvider.GetRequiredService<LeaderBoardReadDbContext>();
+        var leaderBoardDbContext =
+            scope.ServiceProvider.GetRequiredService<LeaderBoardReadDbContext>();
         await leaderBoardDbContext.Database.MigrateAsync();
 
         var inboxOutboxDbContext = scope.ServiceProvider.GetRequiredService<InboxOutboxDbContext>();

@@ -16,9 +16,9 @@ public static class GetGlobalScoreAndRankEndpoint
             .WithTags(nameof(PlayerScores))
             .WithName(nameof(GetGlobalScoreAndRank));
 
-        static async Task<Results<Ok<PlayerScoreWithNeighborsDto>, ValidationProblem>> Handle(
-            [AsParameters] GetRangeScoresAndRanksRequestParameter requestParameters
-        )
+        static async Task<
+            Results<Ok<PlayerScoreWithNeighborsDto>, ValidationProblem, ProblemHttpResult>
+        > Handle([AsParameters] GetRangeScoresAndRanksRequestParameter requestParameters)
         {
             var (mediator, cancellationToken, playerId, leaderboardName, isDesc) =
                 requestParameters;

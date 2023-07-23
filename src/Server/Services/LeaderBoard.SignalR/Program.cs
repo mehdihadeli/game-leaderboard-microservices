@@ -1,19 +1,31 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Reflection;
 using System.Text;
+using LeaderBoard.DbMigrator;
+using LeaderBoard.SharedKernel.Application.Data.EFContext;
+using LeaderBoard.SharedKernel.Bus;
+using LeaderBoard.SharedKernel.Core.Exceptions;
 using LeaderBoard.SharedKernel.Core.Extensions;
 using LeaderBoard.SharedKernel.Jwt;
+using LeaderBoard.SharedKernel.Postgres;
+using LeaderBoard.SharedKernel.Web.ProblemDetail.Middlewares.CaptureExceptionMiddleware;
 using LeaderBoard.SignalR;
+using LeaderBoard.SignalR.Consumers;
 using LeaderBoard.SignalR.Extensions.WebApplicationBuilderExtensions;
 using LeaderBoard.SignalR.Hubs;
+using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Serilog.Events;
+using Serilog.Exceptions;
 
 Log.Logger = new LoggerConfiguration().MinimumLevel
     .Override("Microsoft", LogEventLevel.Information)
     .Enrich.FromLogContext()
+    .Enrich.WithExceptionDetails()
     .WriteTo.Console()
     .CreateBootstrapLogger();
 
@@ -39,6 +51,10 @@ try
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
+
+    builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+
+    builder.AddCustomHttpClients();
 
     // https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/issues/415
     // https://mderriey.com/2019/06/23/where-are-my-jwt-claims/
@@ -77,6 +93,48 @@ try
 
     builder.Services.AddTransient<IHubService, HubService>();
 
+    builder.AddPostgresDbContext<InboxOutboxDbContext>(
+        migrationAssembly: typeof(MigrationRootMetadata).Assembly
+    );
+
+    builder.Services.AddMassTransit(x =>
+    {
+        // setup masstransit for outbox and producing messages through `IPublishEndpoint`
+        x.AddEntityFrameworkOutbox<InboxOutboxDbContext>(o =>
+        {
+            o.QueryDelay = TimeSpan.FromSeconds(1);
+            o.UsePostgres();
+            o.UseBusOutbox();
+
+            o.DuplicateDetectionWindow = TimeSpan.FromSeconds(60);
+        });
+
+        x.SetKebabCaseEndpointNameFormatter();
+        x.AddConsumer<PlayersRankAffectedConsumer>();
+
+        x.UsingRabbitMq(
+            (context, cfg) =>
+            {
+                cfg.AutoStart = true;
+                cfg.ConfigureEndpoints(context);
+
+                // https://masstransit-project.com/usage/exceptions.html#retry
+                // https://markgossa.com/2022/06/masstransit-exponential-back-off.html
+                cfg.UseMessageRetry(r =>
+                {
+                    r.Exponential(
+                            3,
+                            TimeSpan.FromMilliseconds(200),
+                            TimeSpan.FromMinutes(120),
+                            TimeSpan.FromMilliseconds(200)
+                        )
+                        .Ignore<ValidationException>(); // don't retry if we have invalid data and message goes to _error queue masstransit
+                });
+            }
+        );
+    });
+    builder.Services.AddScoped<IBusPublisher, BusPublisher>();
+
     var policyName = "defaultCorsPolicy";
     builder.Services.AddCors(options =>
     {
@@ -94,9 +152,12 @@ try
 
     var app = builder.Build();
 
-    app.UseExceptionHandler(
-        options: new ExceptionHandlerOptions { AllowStatusCode404Response = true }
-    );
+    if (app.Environment.IsProduction())
+    {
+        app.UseExceptionHandler(
+            options: new ExceptionHandlerOptions { AllowStatusCode404Response = true }
+        );
+    }
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("test"))
@@ -128,6 +189,12 @@ try
     {
         app.UseSwagger();
         app.UseSwaggerUI();
+    }
+
+    using (var scope = app.Services.CreateScope())
+    {
+        var inboxOutboxDbContext = scope.ServiceProvider.GetRequiredService<InboxOutboxDbContext>();
+        await inboxOutboxDbContext.Database.MigrateAsync();
     }
 
     app.Run();

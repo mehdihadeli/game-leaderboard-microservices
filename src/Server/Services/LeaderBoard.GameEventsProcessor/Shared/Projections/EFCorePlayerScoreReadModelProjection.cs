@@ -3,6 +3,7 @@ using LeaderBoard.SharedKernel.Application.Events;
 using LeaderBoard.SharedKernel.Application.Models;
 using LeaderBoard.SharedKernel.Contracts.Data.EventStore.Projections;
 using LeaderBoard.SharedKernel.Contracts.Domain.Events;
+using Microsoft.Extensions.Options;
 
 namespace LeaderBoard.GameEventsProcessor.Shared.Projections;
 
@@ -10,10 +11,15 @@ namespace LeaderBoard.GameEventsProcessor.Shared.Projections;
 public class EFCorePlayerScoreReadModelProjection : IReadProjection
 {
     private readonly LeaderBoardReadDbContext _leaderBoardReadDbContext;
+    private readonly LeaderBoardOptions _leaderBoardOptions;
 
-    public EFCorePlayerScoreReadModelProjection(LeaderBoardReadDbContext leaderBoardReadDbContext)
+    public EFCorePlayerScoreReadModelProjection(
+        LeaderBoardReadDbContext leaderBoardReadDbContext,
+        IOptions<LeaderBoardOptions> leaderBoardOptions
+    )
     {
         _leaderBoardReadDbContext = leaderBoardReadDbContext;
+        _leaderBoardOptions = leaderBoardOptions.Value;
     }
 
     public async Task ProjectAsync<TEvent>(
@@ -22,6 +28,10 @@ public class EFCorePlayerScoreReadModelProjection : IReadProjection
     )
         where TEvent : IDomainEvent
     {
+        // we should return here if another caching write-strategy already is active, otherwise we have some duplicate writes updating
+        if (!_leaderBoardOptions.UseWriteCacheAside)
+            return;
+
         var @event = eventEnvelope.Data;
         var eventMetadata = eventEnvelope.Metadata;
 

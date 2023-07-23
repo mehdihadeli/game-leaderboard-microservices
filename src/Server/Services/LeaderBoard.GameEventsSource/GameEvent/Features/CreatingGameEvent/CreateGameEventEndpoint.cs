@@ -3,7 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
-namespace LeaderBoard.GameEventsSource.GameEvent.Features;
+namespace LeaderBoard.GameEventsSource.GameEvent.Features.CreatingGameEvent;
 
 internal static class CreateGameEventEndpoint
 {
