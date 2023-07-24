@@ -1,17 +1,10 @@
-<p>player-score works!</p>
-
-{{ hubHelloMessage }}
-
-<button (click)="signalrService.helloWithConnectionFromServer()">
-  helloServerWithConnection
-</button>
-<br />
-<button (click)="signalrService.helloFromServer()">helloServer</button>
-
-<h1>Leaderboard</h1>
+<h1>Leader Board</h1>
 
 <div class="table-responsive">
-  <table class="table table-striped table-bordered">
+  <table
+    *ngIf="playerScoreWithNeighborsDto"
+    class="table table-striped table-bordered"
+  >
     <thead>
       <tr>
         <th>PlayerId</th>
@@ -24,40 +17,40 @@
     </thead>
     <tbody>
       <tr *ngIf="playerScoreWithNeighborsDto?.previous">
-        <td>{{ playerScoreWithNeighborsDto?.previous?.playerId }}</td>
-        <td>{{ playerScoreWithNeighborsDto?.previous?.rank }}</td>
+        <td>{{ playerScoreWithNeighborsDto.previous?.playerId }}</td>
+        <td>{{ playerScoreWithNeighborsDto.previous?.rank }}</td>
         <td>
-          {{ playerScoreWithNeighborsDto?.previous?.firstName }}
+          {{ playerScoreWithNeighborsDto.previous?.firstName }}
         </td>
         <td>
-          {{ playerScoreWithNeighborsDto?.previous?.lastName }}
+          {{ playerScoreWithNeighborsDto.previous?.lastName }}
         </td>
-        <td>{{ playerScoreWithNeighborsDto?.previous?.score }}</td>
-        <td>{{ playerScoreWithNeighborsDto?.previous?.country }}</td>
+        <td>{{ playerScoreWithNeighborsDto.previous?.score }}</td>
+        <td>{{ playerScoreWithNeighborsDto.previous?.country }}</td>
       </tr>
       <tr ngClass="current-player">
-        <td>{{ playerScoreWithNeighborsDto?.currentPlayerScore?.playerId }}</td>
-        <td>{{ playerScoreWithNeighborsDto?.currentPlayerScore?.rank }}</td>
+        <td>{{ playerScoreWithNeighborsDto.currentPlayerScore.playerId }}</td>
+        <td>{{ playerScoreWithNeighborsDto.currentPlayerScore.rank }}</td>
         <td>
-          {{ playerScoreWithNeighborsDto?.currentPlayerScore?.firstName }}
+          {{ playerScoreWithNeighborsDto.currentPlayerScore.firstName }}
         </td>
         <td>
-          {{ playerScoreWithNeighborsDto?.currentPlayerScore?.lastName }}
+          {{ playerScoreWithNeighborsDto.currentPlayerScore.lastName }}
         </td>
-        <td>{{ playerScoreWithNeighborsDto?.currentPlayerScore?.score }}</td>
-        <td>{{ playerScoreWithNeighborsDto?.currentPlayerScore?.country }}</td>
+        <td>{{ playerScoreWithNeighborsDto.currentPlayerScore.score }}</td>
+        <td>{{ playerScoreWithNeighborsDto.currentPlayerScore.country }}</td>
       </tr>
       <tr *ngIf="playerScoreWithNeighborsDto?.next">
-        <td>{{ playerScoreWithNeighborsDto?.next?.playerId }}</td>
-        <td>{{ playerScoreWithNeighborsDto?.next?.rank }}</td>
+        <td>{{ playerScoreWithNeighborsDto.next?.playerId }}</td>
+        <td>{{ playerScoreWithNeighborsDto.next?.rank }}</td>
         <td>
-          {{ playerScoreWithNeighborsDto?.next?.firstName }}
+          {{ playerScoreWithNeighborsDto.next?.firstName }}
         </td>
         <td>
-          {{ playerScoreWithNeighborsDto?.next?.lastName }}
+          {{ playerScoreWithNeighborsDto.next?.lastName }}
         </td>
-        <td>{{ playerScoreWithNeighborsDto?.next?.score }}</td>
-        <td>{{ playerScoreWithNeighborsDto?.next?.country }}</td>
+        <td>{{ playerScoreWithNeighborsDto.next?.score }}</td>
+        <td>{{ playerScoreWithNeighborsDto.next?.country }}</td>
       </tr>
     </tbody>
   </table>

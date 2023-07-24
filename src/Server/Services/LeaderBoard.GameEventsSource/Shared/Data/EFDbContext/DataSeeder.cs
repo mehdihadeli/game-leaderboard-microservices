@@ -37,7 +37,19 @@ public class DataSeeder : ISeeder
                 PhoneNumberConfirmed = true
             };
 
+            var secondUser = new Player
+            {
+                FirstName = "test",
+                LastName = "test",
+                Country = "Iran",
+                UserName = "test",
+                Email = "test@test.com",
+                EmailConfirmed = true,
+                PhoneNumberConfirmed = true
+            };
+
             await _userManager.CreateAsync(firstUser, "000000");
+            await _userManager.CreateAsync(secondUser, "000000");
 
             var players = new Faker<Player>()
                 .RuleFor(x => x.FirstName, f => f.Name.FirstName())
@@ -48,7 +60,7 @@ public class DataSeeder : ISeeder
                 .RuleFor(x => x.EmailConfirmed, f => true)
                 .RuleFor(x => x.PhoneNumberConfirmed, f => true)
                 .RuleFor(x => x.Id, f => f.Random.Guid())
-                .Generate(500);
+                .Generate(100);
 
             // https://code-maze.com/dotnet-fast-inserts-entity-framework-ef-core/
             //await _gameEventSourceDbContext.BulkInsertAsync(players);

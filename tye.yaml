@@ -1,0 +1,73 @@
+# https://github.com/dotnet/tye/tree/main/docs
+# https://github.com/dotnet/tye/blob/main/docs/reference/schema.md#environment-variables
+# https://www.daveabrock.com/2020/08/19/microservices-with-tye-1/
+# https://www.daveabrock.com/2020/08/27/microservices-with-tye-2/
+# https://github.com/dotnet/tye/tree/main/samples
+# https://devblogs.microsoft.com/dotnet/introducing-project-tye/
+# https://timdeschryver.dev/blog/tye-starting-and-running-multiple-apis-with-a-single-command
+
+name: app
+containerEngine: docker
+registry: mehdihadeli
+
+services:
+  - name: game-event-processor
+    project: ./src/Server/Services/LeaderBoard.GameEventsProcessor/LeaderBoard.GameEventsProcessor.csproj
+    tags:
+      - backend
+    bindings:
+      - protocol: http
+        name: http
+        port: 5000
+
+  - name: game-event-source
+    project: ./src/Server/Services/LeaderBoard.GameEventsSource/LeaderBoard.GameEventsSource.csproj
+    tags:
+      - backend
+    bindings:
+      - protocol: http
+        name: http
+        port: 3500
+
+  - name: signalr
+    project: ./src/Server/Services/LeaderBoard.SignalR/LeaderBoard.SignalR.csproj
+    tags:
+      - backend
+    bindings:
+      - protocol: http
+        name: http
+        port: 7200
+
+  # - name: caching-read-through
+  #   project: ./src/Server/CacheStrategies/LeaderBoard.ReadThrough/LeaderBoard.ReadThrough.csproj
+  #   tags:
+  #     - backend
+  #   bindings:
+  #     - protocol: http
+  #       name: http
+  #       port: 4000
+
+  # - name: caching-write-through
+  #   project: ./src/Server/CacheStrategies/LeaderBoard.WriteThrough/LeaderBoard.WriteThrough.csproj
+  #   tags:
+  #     - backend
+  #   bindings:
+  #     - protocol: http
+  #       name: http
+  #       port: 7000
+
+  # - name: caching-write-behind
+  #   project: ./src/Server/CacheStrategies/LeaderBoard.WriteBehind/LeaderBoard.WriteBehind.csproj
+  #   tags:
+  #     - backend
+  #   bindings:
+  #     - protocol: http
+  #       name: http
+  #       port: 8000
+
+  - name: front-end
+    executable: cmd
+    args: "/c cd ./src/Client && npm start"
+    bindings:
+      - protocol: http
+        port: 4200

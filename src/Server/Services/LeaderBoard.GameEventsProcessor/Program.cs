@@ -11,7 +11,6 @@ using LeaderBoard.GameEventsProcessor.Shared.Data;
 using LeaderBoard.GameEventsProcessor.Shared.Extensions.WebApplicationBuilderExtensions;
 using LeaderBoard.GameEventsProcessor.Shared.LocalRedisMessage;
 using LeaderBoard.GameEventsProcessor.Shared.Services;
-using LeaderBoard.GameEventsProcessor.Shared.Workers;
 using LeaderBoard.SharedKernel.Application.Data.EFContext;
 using LeaderBoard.SharedKernel.Application.Messages;
 using LeaderBoard.SharedKernel.Application.Messages.PlayerScore;
@@ -160,9 +159,6 @@ try
         );
     });
     builder.Services.AddScoped<IBusPublisher, BusPublisher>();
-
-    // setup workers
-    builder.Services.AddHostedService<ProduceEventsWorker>();
 
     var app = builder.Build();
 

@@ -63,7 +63,7 @@ internal class AddOrUpdatePlayerScoreHandler : IRequestHandler<AddOrUpdatePlayer
                     request.Score,
                     request.LeaderBoardName,
                     request.FirstName,
-                    request.LeaderBoardName,
+                    request.LastName,
                     request.Country
                 );
             }

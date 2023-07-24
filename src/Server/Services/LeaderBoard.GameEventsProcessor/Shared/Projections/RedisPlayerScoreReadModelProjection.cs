@@ -1,7 +1,6 @@
 using Humanizer;
 using LeaderBoard.GameEventsProcessor.Shared.LocalRedisMessage;
 using LeaderBoard.SharedKernel.Application.Events;
-using LeaderBoard.SharedKernel.Application.Messages;
 using LeaderBoard.SharedKernel.Application.Models;
 using LeaderBoard.SharedKernel.Bus;
 using LeaderBoard.SharedKernel.Contracts.Data.EventStore.Projections;
