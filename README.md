@@ -21,6 +21,23 @@ This application capable of handling online calculation of player ranks with usi
 - ✅ Using [Postgres](https://www.npgsql.org/efcore/) and Redis as secondary database on top of EventStore [Projections](https://web.archive.org/web/20230128040244/https://zimarev.com/blog/event-sourcing/projections/)
 - ✅ Supporting different type of caching strategy like `Read-Through`, `Write-Through`, `Write-Behind`, `Read and Write Cache Aside` on top of `redis` for handling millions of request per second
 
+## Libraries
+
+- ✔️ **[`.NET 8`](https://dotnet.microsoft.com/download)** - .NET Framework and .NET Core, including ASP.NET and ASP.NET Core
+- ✔️ **[`StackExchange.Redis`](https://github.com/StackExchange/StackExchange.Redis)** - General purpose redis client
+- ✔️ **[`MassTransit`](https://github.com/MassTransit/MassTransit)** - Distributed Application Framework for .NET
+- ✔️ **[`EventStore-Client-Dotnet`](https://github.com/EventStore/EventStore-Client-Dotnet)** - Dotnet Client SDK for the Event Store gRPC Client API written in C#
+- ✔️ **[`Npgsql Entity Framework Core Provider`](https://www.npgsql.org/efcore/)** - Npgsql has an Entity Framework (EF) Core provider. It behaves like other EF Core providers (e.g. SQL Server), so the general EF Core docs apply here as well
+- ✔️ **[`FluentValidation`](https://github.com/FluentValidation/FluentValidation)** - Popular .NET validation library for building strongly-typed validation rules
+- ✔️ **[`Swagger & Swagger UI`](https://github.com/domaindrivendev/Swashbuckle.AspNetCore)** - Swagger tools for documenting API's built on ASP.NET Core
+- ✔️ **[`Serilog`](https://github.com/serilog/serilog)** - Simple .NET logging with fully-structured events
+- ✔️ **[`Polly`](https://github.com/App-vNext/Polly)** - Polly is a .NET resilience and transient-fault-handling library that allows developers to express policies such as Retry, Circuit Breaker, Timeout, Bulkhead Isolation, and Fallback in a fluent and thread-safe manner
+- ✔️ **[`Scrutor`](https://github.com/khellang/Scrutor)** - Assembly scanning and decoration extensions for Microsoft.Extensions.DependencyInjection
+- ✔️ **[`Newtonsoft.Json`](https://github.com/JamesNK/Newtonsoft.Json)** - Json.NET is a popular high-performance JSON framework for .NET
+- ✔️ **[`AspNetCore.Diagnostics.HealthChecks`](https://github.com/Xabaril/AspNetCore.Diagnostics.HealthChecks)** - Enterprise HealthChecks for ASP.NET Core Diagnostics Package
+  NET Compiler Platform
+- ✔️ **[`AutoMapper`](https://github.com/AutoMapper/AutoMapper)** - Convention-based object-object mapper in .NET.
+
 ## Architecture
 
 For implementing this application we can use different type of caching strategy and we can config our caching strategy in [appsettings.json](src/Server/Services/LeaderBoard.GameEventsProcessor/appsettings.json) file of our [GameEventsProcessor](src/Server/Services/LeaderBoard.GameEventsProcessor/) service and run our [caching strategy workers](src/Server/CacheStrategies/) separately (like WriteThrough, WriteBehind and ReadThrough), if we don't want to use our built-in `Write-aside caching` and ` Read-aside caching` caching strategy.
@@ -45,6 +62,31 @@ TODO
 ### Write-Behind & Read-Through
 
 TODO
+
+## Application Structure
+
+In this project I used [vertical slice architecture](https://jimmybogard.com/vertical-slice-architecture/) or [Restructuring to a Vertical Slice Architecture](https://codeopinion.com/restructuring-to-a-vertical-slice-architecture/) also I used [feature folder structure](http://www.kamilgrzybek.com/design/feature-folders/) in this project.
+
+- We treat each request as a distinct use case or slice, encapsulating and grouping all concerns from front-end to back.
+- When We adding or changing a feature in an application in n-tire architecture, we are typically touching many different "layers" in an application. we are changing the user interface, adding fields to models, modifying validation, and so on. Instead of coupling across a layer, we couple vertically along a slice and each change affects only one slice.
+- We `Minimize coupling` `between slices`, and `maximize coupling` `in a slice`.
+- With this approach, each of our vertical slices can decide for itself how to best fulfill the request. New features only add code, we're not changing shared code and worrying about side effects. For implementing vertical slice architecture using cqrs pattern is a good match.
+
+![](./assets/vertical-slice-architecture.jpg)
+
+Also here I used [CQRS](https://www.eventecommerce.com/cqrs-pattern) for decompose my features to very small parts that makes our application:
+
+- maximize performance, scalability and simplicity.
+- adding new feature to this mechanism is very easy without any breaking change in other part of our codes. New features only add code, we're not changing shared code and worrying about side effects.
+- easy to maintain and any changes only affect on one command or query (or a slice) and avoid any breaking changes on other parts
+- it gives us better separation of concerns and cross cutting concern (with help of MediatR behavior pipelines) in our code instead of a big service class for doing a lot of things.
+
+With using [CQRS](https://event-driven.io/en/cqrs_facts_and_myths_explained/), our code will be more aligned with [SOLID principles](https://en.wikipedia.org/wiki/SOLID), especially with:
+
+- [Single Responsibility](https://en.wikipedia.org/wiki/Single-responsibility_principle) rule - because logic responsible for a given operation is enclosed in its own type.
+- [Open-Closed](https://en.wikipedia.org/wiki/Open%E2%80%93closed_principle) rule - because to add new operation you don’t need to edit any of the existing types, instead you need to add a new file with a new type representing that operation.
+
+Here instead of some [Technical Splitting](http://www.kamilgrzybek.com/design/feature-folders/) for example a folder or layer for our `services`, `controllers` and `data models` which increase dependencies between our technical splitting and also jump between layers or folders, We cut each business functionality into some vertical slices, and inner each of these slices we have [Technical Folders Structure](http://www.kamilgrzybek.com/design/feature-folders/) specific to that feature (command, handlers, infrastructure, repository, controllers, data models, ...).
 
 ## Prerequisites
 
@@ -83,6 +125,16 @@ npm start
 ```
 
 ## How To Run Backend
+
+TODO
+
+## Contribution
+
+The application is in development status. You are feel free to submit pull request or create the issue.
+
+## License
+
+The project is under [MIT license](https://github.com/mehdihadeli/game-leaderboard-microservices/blob/main/LICENSE).
 
 ## References
 
