@@ -8,7 +8,6 @@ using LeaderBoard.SharedKernel.Core.Exceptions;
 using LeaderBoard.SharedKernel.Core.Extensions;
 using LeaderBoard.SharedKernel.Jwt;
 using LeaderBoard.SharedKernel.Postgres;
-using LeaderBoard.SharedKernel.Web.ProblemDetail.Middlewares.CaptureExceptionMiddleware;
 using LeaderBoard.SignalR;
 using LeaderBoard.SignalR.Consumers;
 using LeaderBoard.SignalR.Extensions.WebApplicationBuilderExtensions;

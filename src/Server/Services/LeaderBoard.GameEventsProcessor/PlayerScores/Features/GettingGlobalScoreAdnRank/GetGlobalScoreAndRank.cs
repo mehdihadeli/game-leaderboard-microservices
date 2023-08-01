@@ -81,6 +81,7 @@ internal class GetGlobalScoreAndRankHandler
             );
             if (playerScore != null)
             {
+                // Update redis cache in read cache-aside strategy
                 await _playerScoreService.PopulateCache(playerScore);
 
                 rank = await _redisDatabase.SortedSetRankAsync(

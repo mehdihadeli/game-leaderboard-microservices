@@ -1,4 +1,4 @@
-# LeaderBoard
+# Game LeaderBoard Microservices
 
 This project is an implementation of a imaginary [Game LeaderBoard](https://en.wikipedia.org/wiki/Ladder_tournament) application, based on [Event Driven Architecture](https://learn.microsoft.com/en-us/azure/architecture/guide/architecture-styles/event-driven), [Vertical Slice Architecture](https://jimmybogard.com/vertical-slice-architecture/), [Event Sourcing](https://learn.microsoft.com/en-us/azure/architecture/patterns/event-sourcing) with EventStoreDB, [Redis SortedSet](https://redis.io/docs/data-types/sorted-sets/), [Redis Pub/Sub](https://redis.io/docs/interact/pubsub/), SignalR and .Net 8.
 
@@ -23,7 +23,7 @@ This application capable of handling online calculation of player ranks with usi
 
 ## Architecture
 
-For implementing this application we can use different type of caching strategy and we can config our caching strategy in [appsettings.json](src/Server/Services/LeaderBoard.GameEventsProcessor/appsettings.json) file of our [GameEventsProcessor](src/Server/Services/LeaderBoard.GameEventsProcessor/) service and run our [caching strategy workers](src/Server/CacheStrategies/) separately (like WriteThrough, WriteBehind and ReadThrough) if we don't want to use our built-in `Write-aside caching` and ` Read-aside caching` caching strategy.
+For implementing this application we can use different type of caching strategy and we can config our caching strategy in [appsettings.json](src/Server/Services/LeaderBoard.GameEventsProcessor/appsettings.json) file of our [GameEventsProcessor](src/Server/Services/LeaderBoard.GameEventsProcessor/) service and run our [caching strategy workers](src/Server/CacheStrategies/) separately (like WriteThrough, WriteBehind and ReadThrough), if we don't want to use our built-in `Write-aside caching` and ` Read-aside caching` caching strategy.
 
 For decreasing calculation and response time for real-time rank calculation with millions of request and changes per second we need to use a high performant approach to handling this issue, redis has very handy feature of [SortedSet](https://redis.io/docs/data-types/sorted-sets/) and when store a member with specific score, based on score sorted re-arrange affected members with new rank for each member in the SortedSet. With sorted sets it is trivial to return a list of player sorted by their scores because actually they are already sorted and ranked.
 
@@ -36,9 +36,15 @@ Also for ensuring about losing our data and events in our redis cache because it
 
 ### Write-Aside Caching & Read-Aside Caching
 
+![](./assets/write-read-cache-aside.png)
+
 ### Write-Through & Read-Through
 
+TODO
+
 ### Write-Behind & Read-Through
+
+TODO
 
 ## Prerequisites
 
