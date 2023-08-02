@@ -1,9 +1,10 @@
+using LeaderBoard.GameEventsProcessor.PlayerScores.Features.AddingOrUpdatingPlayerScore;
 using LeaderBoard.GameEventsProcessor.Shared;
 using LeaderBoard.SharedKernel.Application.Messages;
 using MassTransit;
 using MediatR;
 
-namespace LeaderBoard.GameEventsProcessor.PlayerScores.Features.AddingOrUpdatingPlayerScore.Events.External;
+namespace LeaderBoard.GameEventsProcessor.GameEvent.Features.CreatingGameEvent.Events.External;
 
 public class GameEventChangedConsumer : IConsumer<GameEventChanged>
 {

@@ -1,8 +1,8 @@
 using System.Reflection;
 using Humanizer;
 using LeaderBoard.DbMigrator;
+using LeaderBoard.GameEventsProcessor.GameEvent.Features.CreatingGameEvent.Events.External;
 using LeaderBoard.GameEventsProcessor.PlayerScores.Features.AddingOrUpdatingPlayerScore;
-using LeaderBoard.GameEventsProcessor.PlayerScores.Features.AddingOrUpdatingPlayerScore.Events.External;
 using LeaderBoard.GameEventsProcessor.PlayerScores.Features.GettingGlobalScoreAdnRank;
 using LeaderBoard.GameEventsProcessor.PlayerScores.Features.GettingPlayerGroupGlobalScoresAndRanks;
 using LeaderBoard.GameEventsProcessor.PlayerScores.Features.GettingRangeScoresAndRanks;

@@ -55,6 +55,26 @@ Also for ensuring about losing our data and events in our redis cache because it
 
 ![](./assets/write-read-cache-aside.png)
 
+Here we used `Cache-Aside` strategy for both read and write.
+
+The flow of our application for showing leader board to users is according these steps:
+
+1. Suppose we have a online game and our users can play the game through mobile or web browser. After getting some points in the game our `mobile app` or `web app` will send a `AddOrUpdate` command to its corresponding endpoint in `GameEventSource` service through our `traefik ingress`, load balancer and reverse proxy.
+2. Our traefik will route `AddOrUpdate` request to `GameEventSource` service endpoint.
+3. AddOrUpdate endpoint `GameEventSource` service publishes `GameEventChanged` to the broker.
+4. `GameEventChangedConsumer` which is subscribed on `GameEventChanged` event in `GameEventProcessor` service, will get `GameEventChanged` event from the broker.
+5. our `GameEventChangedConsumer` will call `AddOrUpdatePlayerScore` command and inner `AddOrUpdatePlayerScoreHandler` handler we store events on the EventStoreDB for keep track of all events over the time.
+6. After storing events on EventStoreDB our `Postgres Projection (EFCorePlayerScoreReadModelProjection)` and `Redis Projection (RedisPlayerScoreReadModelProjection)` will be triggered.Then these projections will materialize the input data into their respective read data models and store them on Redis and Postgres.
+7. Our `RedisPlayerScoreReadModelProjection` projection will publish a `RedisScoreChangedMessage` message through Redis `Pub/Sub`
+8. Our `GameEventProcessor` service, which is subscribed on `RedisScoreChangedMessage` Redis message, will get message by its predefined `Redis subscriber` on `RedisScoreChangedMessage` message.
+9. Our `Redis Subscriber` on `RedisScoreChangedMessage` message will publish `PlayersRankAffected` message to the broker.
+10. Our SignalR service which is subscribed on `PlayersRankAffected` message through `PlayersRankAffectedConsumer` consumer, will get the message and calls `UpdatePlayersScoreForClient` on our `IHubService`.
+11. Our `UpdatePlayersScoreForClient` on `IHubService` of SignalR service, will get all affected players based on our `ScoreChanged` event through a REST call to `GameEventProcessor` service.
+12. Our `GameEventProcessor` service and `GetPlayerGroupGlobalScoresAndRanks` endpoint will get all related players score with `GetGlobalScoreAndRank` query. This query at-first tries to get rank and score form redis sorted set and if not exists it will uses `Read-Aside Caching` and will read data from primary database and will update our redis database.
+13. If the data not existed on the redis we check our primary database which is postgres in this example.
+14. After getting data from postgres we update our Redis SortedSet and HashSet data.
+15. We send fetched score via `HubService` of our SignalR service in a real time to connected affected players.
+
 ### Write-Through & Read-Through
 
 TODO
