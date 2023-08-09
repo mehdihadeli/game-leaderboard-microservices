@@ -146,7 +146,63 @@ npm start
 
 ## How To Run Backend
 
-TODO
+For running our backend we can use different caching strategies:
+
+### Running With Cache Aside Strategies
+
+First of all we should turn-on both write and read cache aside strategies in `GameEventProcessor` service and [appsettings.json](src/Server/Services/LeaderBoard.GameEventsProcessor/appsettings.json) file with setting `UseReadCacheAside` and `UseWriteCacheAside` to `true`:
+
+```json
+  "LeaderBoardOptions": {
+    "UseReadCacheAside": true,
+    "UseWriteCacheAside": true,
+    "UseReadThrough": false,
+    "UseWriteBehind": false,
+    "UseWriteThrough": false,
+    "CleanupRedisOnStart": true,
+    "UseCacheWarmUp": true,
+    "SeedInitialData": true
+  },
+```
+
+Now we should run our needed services:
+
+```bash
+dotnet run --project src/Server/Services/LeaderBoard.GameEventsSource
+dotnet run --project src/Server/Services/LeaderBoard.GameEventsProcessor
+dotnet run --project src/Server/Services/LeaderBoard.SignalR
+```
+
+Now our `GameEventSource` service is available on [`http://localhost:3500`](http://localhost:3500), and `GameEventsProcessor` service is available on [`http://localhost:5000`](http://localhost:5000) and our SignalR is available on [`http://localhost:7200`](http://localhost:7200).
+
+### Running With Write Behind And ReadThrough Strategies
+
+First of all we should turn-on both write-behind and read-through strategies in `GameEventProcessor` service and [appsettings.json](src/Server/Services/LeaderBoard.GameEventsProcessor/appsettings.json) file with setting `UseWriteBehind` and `UseReadThrough` to `true`:
+
+```json
+  "LeaderBoardOptions": {
+    "UseReadCacheAside": false,
+    "UseWriteCacheAside": false,
+    "UseReadThrough": true,
+    "UseWriteBehind": true,
+    "UseWriteThrough": false,
+    "CleanupRedisOnStart": true,
+    "UseCacheWarmUp": true,
+    "SeedInitialData": true
+  },
+```
+
+Now we should run our needed services:
+
+```bash
+dotnet run --project src/Server/CacheStrategies/LeaderBoard.ReadThrough
+dotnet run --project src/Server/CacheStrategies/LeaderBoard.WriteBehind
+dotnet run --project src/Server/Services/LeaderBoard.GameEventsSource
+dotnet run --project src/Server/Services/LeaderBoard.GameEventsProcessor
+dotnet run --project src/Server/Services/LeaderBoard.SignalR
+```
+
+Now our `GameEventSource` service is available on [`http://localhost:3500`](http://localhost:3500), and `GameEventsProcessor` service is available on [`http://localhost:5000`](http://localhost:5000) and our SignalR is available on [`http://localhost:7200`](http://localhost:7200).
 
 ## Contribution
 
