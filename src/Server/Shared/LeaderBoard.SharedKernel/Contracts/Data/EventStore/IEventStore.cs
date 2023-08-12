@@ -24,8 +24,7 @@ public interface IEventStore
         string streamId,
         StreamReadPosition? fromVersion = null,
         int maxCount = int.MaxValue,
-        CancellationToken cancellationToken = default
-    );
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets events for an specific stream.

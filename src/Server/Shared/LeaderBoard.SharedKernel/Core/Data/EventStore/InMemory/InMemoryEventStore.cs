@@ -17,8 +17,7 @@ public class InMemoryEventStore : IEventStore
         string streamId,
         StreamReadPosition? fromVersion = null,
         int maxCount = int.MaxValue,
-        CancellationToken cancellationToken = default
-    )
+        CancellationToken cancellationToken = default)
     {
         var result = FindStream(streamId)
             .GetEvents(fromVersion ?? StreamReadPosition.Start, maxCount);

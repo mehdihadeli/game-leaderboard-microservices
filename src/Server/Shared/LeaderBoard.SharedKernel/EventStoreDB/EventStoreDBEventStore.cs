@@ -38,8 +38,7 @@ public class EventStoreDBEventStore : IEventStore
         string streamId,
         StreamReadPosition? fromVersion = null,
         int maxCount = int.MaxValue,
-        CancellationToken cancellationToken = default
-    )
+        CancellationToken cancellationToken = default)
     {
         var readResult = _grpcClient.ReadStreamAsync(
             Direction.Forwards,

@@ -5,7 +5,7 @@ namespace LeaderBoard.SharedKernel.EventStoreDB.Extensions;
 
 public static class StreamEventExtensions
 {
-    public static IEnumerable<StreamEvent> ToStreamEvents(this IEnumerable<ResolvedEvent> resolvedEvents)
+    public static IEnumerable<StreamEvent?> ToStreamEvents(this IEnumerable<ResolvedEvent> resolvedEvents)
     {
         return resolvedEvents.Select(x => x.ToStreamEvent());
     }

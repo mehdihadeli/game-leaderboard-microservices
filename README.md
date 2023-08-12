@@ -214,8 +214,7 @@ The project is under [MIT license](https://github.com/mehdihadeli/game-leaderboa
 
 ## References
 
-### Articles
-
 - [3 crucial caching choices: Where, when, and how](https://www.gomomento.com/blog/3-crucial-caching-choices-where-when-and-how)
 - [6 common caching design patterns to execute your caching strategy](https://www.gomomento.com/blog/6-common-caching-design-patterns-to-execute-your-caching-strategy)
 - [Caching Strategies and How to Choose the Right One](https://codeahoy.com/2017/08/11/caching-strategies-and-how-to-choose-the-right-one/)
+- [oskardudycz/EventSourcing.NetCore](https://github.com/oskardudycz/EventSourcing.NetCore)
