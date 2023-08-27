@@ -9,7 +9,7 @@ namespace LeaderBoard.SharedKernel.Contracts.Data.EventStore.Projections;
 public interface IReadProjection
 {
     Task ProjectAsync<TEvent>(
-        IEventEnvelope<TEvent> eventEnvelope,
+        IStreamEvent<TEvent> streamEvent,
         CancellationToken cancellationToken = default
     )
         where TEvent : IDomainEvent;
@@ -19,7 +19,7 @@ public interface IReadProjection<in TEvent>
     where TEvent : IDomainEvent
 {
     Task ProjectAsync(
-        IEventEnvelope<TEvent> eventEnvelope,
+        IStreamEvent<TEvent> streamEvent,
         CancellationToken cancellationToken = default
     );
 }

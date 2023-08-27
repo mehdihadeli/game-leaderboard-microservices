@@ -109,9 +109,9 @@ public class EventStoreDBSubscriptionToAll : BackgroundService
             if (IsEventWithEmptyData(resolvedEvent) || IsCheckpointEvent(resolvedEvent))
                 return;
 
-            var eventEnvelope = resolvedEvent.ToEventEnvelope();
+            var streamEvent = resolvedEvent.ToStreamEvent();
 
-            if (eventEnvelope == null)
+            if (streamEvent == null)
             {
                 // That can happen if we're sharing database between modules.
                 // If we're subscribing to all and not filtering out events from other modules,
@@ -138,10 +138,10 @@ public class EventStoreDBSubscriptionToAll : BackgroundService
                     {
                         // publish event to internal event bus
                         await _internalEventBus
-                            .Publish(eventEnvelope, _cancellationToken)
+                            .Publish(streamEvent, _cancellationToken)
                             .ConfigureAwait(false);
 
-                        await _projectionPublisher.PublishAsync(eventEnvelope, _cancellationToken);
+                        await _projectionPublisher.PublishAsync(streamEvent, _cancellationToken);
 
                         await _checkpointRepository
                             .Store(
@@ -155,9 +155,9 @@ public class EventStoreDBSubscriptionToAll : BackgroundService
                     {
                         Tags =
                         {
-                            { TelemetryTags.EventHandling.Event, eventEnvelope.Data.GetType() }
+                            { TelemetryTags.EventHandling.Event, streamEvent.Data.GetType() }
                         },
-                        Parent = eventEnvelope.Metadata.PropagationContext?.ActivityContext,
+                        Parent = streamEvent.Metadata.PropagationContext?.ActivityContext,
                         Kind = ActivityKind.Consumer
                     },
                     token

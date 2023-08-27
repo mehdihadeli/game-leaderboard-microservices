@@ -2,15 +2,14 @@ using LeaderBoard.SharedKernel.Contracts.Domain.Events;
 
 namespace LeaderBoard.SharedKernel.Contracts.Data.EventStore;
 
-public interface IStreamEvent : IEvent
+public interface IStreamEvent
 {
-    public IDomainEvent Data { get; }
-
-    public IStreamEventMetadata? Metadata { get; }
+    object Data { get; }
+    IStreamEventMetadata Metadata { get; init; }
 }
 
 public interface IStreamEvent<out T> : IStreamEvent
-    where T : IDomainEvent
+where T : IDomainEvent
 {
-    public new T Data { get; }
+    new T Data { get; }
 }

@@ -34,7 +34,7 @@ public static class SerializationExtensions
         return ToJsonEventData(@event.Data, @event.Metadata);
     }
 
-    public static EventData ToJsonEventData(this IDomainEvent @event, IStreamEventMetadata? metadata = null)
+    public static EventData ToJsonEventData(this object @event, IStreamEventMetadata? metadata = null)
     {
         return new(
             Uuid.NewUuid(),

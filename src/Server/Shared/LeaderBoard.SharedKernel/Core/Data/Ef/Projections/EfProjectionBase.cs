@@ -1,3 +1,4 @@
+using LeaderBoard.SharedKernel.Contracts.Data.EventStore;
 using LeaderBoard.SharedKernel.Contracts.Data.EventStore.Projections;
 using LeaderBoard.SharedKernel.Contracts.Domain.Events;
 using Microsoft.EntityFrameworkCore;
@@ -18,7 +19,7 @@ public abstract class EfProjectionBase<TDbContext, TView> : IReadProjection
     protected abstract Guid GetId(IDomainEvent domainEvent);
 
     public virtual async Task ProjectAsync<TEvent>(
-        IEventEnvelope<TEvent> eventEnvelope,
+        IStreamEvent<TEvent> eventEnvelope,
         CancellationToken cancellationToken = default
     )
         where TEvent : IDomainEvent
@@ -43,7 +44,7 @@ public abstract class EfProjectionBase<TDbContext, TView> : IReadProjection
 
         entity.When(@event);
 
-        entity.LastProcessedPosition = eventLogPosition;
+        entity.LastProcessedPosition = eventLogPosition ?? 0;
 
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -64,12 +65,12 @@ internal class EfProjectionBase<TDbContext, TEvent, TView> : IReadProjection<TEv
     }
 
     public async Task ProjectAsync(
-        IEventEnvelope<TEvent> eventEnvelope,
+        IStreamEvent<TEvent> streamEvent,
         CancellationToken cancellationToken = default
     )
     {
-        var @event = eventEnvelope.Data;
-        var eventMetadata = eventEnvelope.Metadata;
+        var @event = streamEvent.Data;
+        var eventMetadata = streamEvent.Metadata;
 
         var id = _getId(@event);
 
@@ -88,7 +89,7 @@ internal class EfProjectionBase<TDbContext, TEvent, TView> : IReadProjection<TEv
 
         entity.When(@event);
 
-        entity.LastProcessedPosition = eventLogPosition;
+        entity.LastProcessedPosition = eventLogPosition ?? 0;
 
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }

@@ -3,6 +3,7 @@ using LeaderBoard.GameEventsProcessor.Shared.LocalRedisMessage;
 using LeaderBoard.SharedKernel.Application.Events;
 using LeaderBoard.SharedKernel.Application.Models;
 using LeaderBoard.SharedKernel.Bus;
+using LeaderBoard.SharedKernel.Contracts.Data.EventStore;
 using LeaderBoard.SharedKernel.Contracts.Data.EventStore.Projections;
 using LeaderBoard.SharedKernel.Contracts.Domain.Events;
 using LeaderBoard.SharedKernel.Redis;
@@ -29,7 +30,7 @@ public class RedisPlayerScoreReadModelProjection : IReadProjection
     }
 
     public async Task ProjectAsync<TEvent>(
-        IEventEnvelope<TEvent> eventEnvelope,
+        IStreamEvent<TEvent> eventEnvelope,
         CancellationToken cancellationToken = default
     )
         where TEvent : IDomainEvent
@@ -55,7 +56,7 @@ public class RedisPlayerScoreReadModelProjection : IReadProjection
 
     private async Task ApplyEvent(
         PlayerScoreAdded @event,
-        EventMetadata eventMetadata,
+        IStreamEventMetadata eventMetadata,
         CancellationToken cancellationToken
     )
     {
@@ -71,7 +72,7 @@ public class RedisPlayerScoreReadModelProjection : IReadProjection
 
     private async Task ApplyEvent(
         PlayerScoreUpdated @event,
-        EventMetadata eventMetadata,
+        IStreamEventMetadata eventMetadata,
         CancellationToken cancellationToken
     )
     {

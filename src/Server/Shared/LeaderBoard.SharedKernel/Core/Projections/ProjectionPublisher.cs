@@ -1,7 +1,9 @@
 using System.Collections.Concurrent;
 using System.Reflection;
+using LeaderBoard.SharedKernel.Contracts.Data.EventStore;
 using LeaderBoard.SharedKernel.Contracts.Data.EventStore.Projections;
 using LeaderBoard.SharedKernel.Contracts.Domain.Events;
+using LeaderBoard.SharedKernel.Core.Data.EventStore;
 using LeaderBoard.SharedKernel.Domain.Events;
 using LeaderBoard.SharedKernel.OpenTelemetry;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,7 +30,7 @@ public class ProjectionPublisher : IProjectionPublisher
     }
 
     public Task PublishAsync(
-        IEventEnvelope eventEnvelope,
+        IStreamEvent eventEnvelope,
         CancellationToken cancellationToken = default
     )
     {
@@ -48,12 +50,12 @@ public class ProjectionPublisher : IProjectionPublisher
             genericPublishMethod.Invoke(this, new object[] { eventEnvelope, cancellationToken })!;
     }
 
-    private async Task Publish<TEvent>(EventEnvelope<TEvent> eventEnvelope, CancellationToken ct)
+    private async Task Publish<TEvent>(StreamEvent<TEvent> streamEvent, CancellationToken ct)
         where TEvent : IDomainEvent
     {
         using var scope = _serviceProvider.CreateScope();
 
-        var eventName = eventEnvelope.Data.GetType().Name;
+        var eventName = streamEvent.Data.GetType().Name;
 
         var activityOptions = new StartActivityOptions
         {
@@ -70,7 +72,7 @@ public class ProjectionPublisher : IProjectionPublisher
                 .Run(
                     activityName,
                     (_, token) =>
-                        _policy.ExecuteAsync(c => projection.ProjectAsync(eventEnvelope, c), token),
+                        _policy.ExecuteAsync(c => projection.ProjectAsync(streamEvent, c), token),
                     activityOptions,
                     ct
                 )
@@ -86,7 +88,7 @@ public class ProjectionPublisher : IProjectionPublisher
                 .Run(
                     activityName,
                     (_, token) =>
-                        _policy.ExecuteAsync(c => genericReadProjection.ProjectAsync(eventEnvelope, c), token),
+                        _policy.ExecuteAsync(c => genericReadProjection.ProjectAsync(streamEvent, c), token),
                     activityOptions,
                     ct
                 )

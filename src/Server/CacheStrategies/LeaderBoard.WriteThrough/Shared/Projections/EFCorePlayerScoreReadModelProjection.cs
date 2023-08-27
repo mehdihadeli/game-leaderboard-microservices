@@ -1,6 +1,7 @@
 using LeaderBoard.SharedKernel.Application.Data.EFContext;
 using LeaderBoard.SharedKernel.Application.Events;
 using LeaderBoard.SharedKernel.Application.Models;
+using LeaderBoard.SharedKernel.Contracts.Data.EventStore;
 using LeaderBoard.SharedKernel.Contracts.Data.EventStore.Projections;
 using LeaderBoard.SharedKernel.Contracts.Domain.Events;
 
@@ -17,7 +18,7 @@ public class EFCorePlayerScoreReadModelProjection : IReadProjection
     }
 
     public async Task ProjectAsync<TEvent>(
-        IEventEnvelope<TEvent> eventEnvelope,
+        IStreamEvent<TEvent> eventEnvelope,
         CancellationToken cancellationToken = default
     )
         where TEvent : IDomainEvent
@@ -39,7 +40,7 @@ public class EFCorePlayerScoreReadModelProjection : IReadProjection
     private async Task ProcessEvent<TEvent>(
         string playerId,
         TEvent @event,
-        EventMetadata eventMetadata,
+        IStreamEventMetadata eventMetadata,
         CancellationToken cancellationToken
     )
         where TEvent : IDomainEvent
@@ -71,7 +72,7 @@ public class EFCorePlayerScoreReadModelProjection : IReadProjection
         if (entity.LastProcessedPosition >= eventLogPosition)
             return;
 
-        entity.LastProcessedPosition = eventLogPosition;
+        entity.LastProcessedPosition = eventLogPosition ?? 0;
 
         await _leaderBoardReadDbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }

@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Reflection;
+using LeaderBoard.SharedKernel.Contracts.Data.EventStore;
 using LeaderBoard.SharedKernel.Contracts.Domain.Events;
 using MediatR;
 using Polly;
@@ -18,7 +19,7 @@ public class InternalEventBus : IInternalEventBus
 		_policy = policy;
 	}
 
-	public Task Publish(IEventEnvelope eventEnvelope, CancellationToken ct)
+	public Task Publish(IStreamEvent eventEnvelope, CancellationToken ct)
 	{
 		// calling generic `Publish<T>` in `InternalEventBus` class
 		var genericPublishMethod = PublishMethods.GetOrAdd(
@@ -32,7 +33,7 @@ public class InternalEventBus : IInternalEventBus
 		return (Task) genericPublishMethod.Invoke(this, new object[] {eventEnvelope, ct})!;
 	}
 
-	public async Task Publish<T>(IEventEnvelope<T> eventEnvelope, CancellationToken ct)
+	public async Task Publish<T>(IStreamEvent<T> eventEnvelope, CancellationToken ct)
 	where T : IDomainEvent
 	{
 		await _policy.ExecuteAsync(c => _mediator.Publish(eventEnvelope.Data, c), ct);
