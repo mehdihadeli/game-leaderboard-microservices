@@ -1,5 +1,7 @@
 # Game LeaderBoard Microservices
 
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/mehdihadeli/game-leaderboard-microservices)
+
 This project is an implementation of an imaginary [Game LeaderBoard](https://en.wikipedia.org/wiki/Ladder_tournament) application, based on Microservices Architecture, [Event Driven Architecture](https://learn.microsoft.com/en-us/azure/architecture/guide/architecture-styles/event-driven), [Vertical Slice Architecture](https://jimmybogard.com/vertical-slice-architecture/), [Event Sourcing](https://learn.microsoft.com/en-us/azure/architecture/patterns/event-sourcing) with EventStoreDB, [Redis SortedSet](https://redis.io/docs/data-types/sorted-sets/), [Redis Pub/Sub](https://redis.io/docs/interact/pubsub/), SignalR and .Net 8.
 
 This application capable of handling online calculation of player ranks with using Redis `SortedSet` so it is very fast and capable for handling 1 million request per second.

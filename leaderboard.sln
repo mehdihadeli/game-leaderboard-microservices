@@ -25,13 +25,41 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeaderBoard.SharedKernel", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeaderBoard.DbMigrator", "src\Server\Shared\LeaderBoard.DbMigrator\LeaderBoard.DbMigrator.csproj", "{FC5D662F-9845-48D1-AA0C-502B74E53459}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "solution items", "solution items", "{4DE6C781-8E79-4B93-89E6-9DF923A39181}"
+	ProjectSection(SolutionItems) = preProject
+		.csharpierrc.yaml = .csharpierrc.yaml
+		.dockerignore = .dockerignore
+		.editorconfig = .editorconfig
+		.gitignore = .gitignore
+		.gitattributes = .gitattributes
+		global.json = global.json
+		commitlint.config.js = commitlint.config.js
+		LICENSE = LICENSE
+		nuget.config = nuget.config
+		leaderboard.sln = leaderboard.sln
+		package.json = package.json
+		README.md = README.md
+		stylecop.json = stylecop.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "deployments", "deployments", "{359C2AAA-C8BD-4118-A571-6DFF21527CBC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docker-compose", "docker-compose", "{0EFA644B-EA33-4D7A-A180-F7EA5E30C3B2}"
+	ProjectSection(SolutionItems) = preProject
+		deployments\docker-compose\docker-compose.infrastructure.yaml = deployments\docker-compose\docker-compose.infrastructure.yaml
+		deployments\docker-compose\.env.sample = deployments\docker-compose\.env.sample
+		deployments\docker-compose\.env = deployments\docker-compose\.env
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tye", "tye", "{688207F0-0CFF-43CE-9C6F-E616DF953FA3}"
+	ProjectSection(SolutionItems) = preProject
+		deployments\tye\tye.yaml = deployments\tye\tye.yaml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{9E8B02F0-C49B-49D4-8918-47A1DE58F10D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -67,6 +95,9 @@ Global
 		{FC5D662F-9845-48D1-AA0C-502B74E53459}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FC5D662F-9845-48D1-AA0C-502B74E53459}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{9E8B02F0-C49B-49D4-8918-47A1DE58F10D} = {EA4CE47E-F59D-42CF-BCB7-C4689A8456F6}
 		{03218712-187E-4554-9DD5-5DF2402EF233} = {EA4CE47E-F59D-42CF-BCB7-C4689A8456F6}
@@ -76,5 +107,8 @@ Global
 		{B500A768-C65A-4201-8C63-409D35DD1B3F} = {8618DF56-1042-4EA8-AF93-A69C3E7D3412}
 		{A4372617-15C0-4B02-92DE-4E0004D33907} = {A04527F6-1C2B-4EA6-8FA1-C46B3860839F}
 		{FC5D662F-9845-48D1-AA0C-502B74E53459} = {A04527F6-1C2B-4EA6-8FA1-C46B3860839F}
+		{359C2AAA-C8BD-4118-A571-6DFF21527CBC} = {4DE6C781-8E79-4B93-89E6-9DF923A39181}
+		{0EFA644B-EA33-4D7A-A180-F7EA5E30C3B2} = {359C2AAA-C8BD-4118-A571-6DFF21527CBC}
+		{688207F0-0CFF-43CE-9C6F-E616DF953FA3} = {359C2AAA-C8BD-4118-A571-6DFF21527CBC}
 	EndGlobalSection
 EndGlobal

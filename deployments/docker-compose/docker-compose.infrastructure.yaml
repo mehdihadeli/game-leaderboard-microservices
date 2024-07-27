@@ -1,4 +1,4 @@
-version: "3.8"
+version: "3.9"
 name: leaderboard
 
 services:
@@ -14,7 +14,6 @@ services:
       #   - rabbitmq:/var/lib/rabbitmq
     networks:
       - leaderboard
-     
 
   postgres:
     image: postgres:latest
@@ -66,7 +65,7 @@ services:
       - ${EVENTSTORE_HOST_PORT:-2113}:${EVENTSTORE_PORT:-2113}
     networks:
       - leaderboard
-  
+
 volumes:
   eventstore-volume-data:
   eventstore-volume-logs:
