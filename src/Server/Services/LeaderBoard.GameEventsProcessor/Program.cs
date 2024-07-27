@@ -35,8 +35,8 @@ using Serilog.Exceptions;
 using StackExchange.Redis;
 
 // https://github.com/serilog/serilog-aspnetcore#two-stage-initialization
-Log.Logger = new LoggerConfiguration().MinimumLevel
-    .Override("Microsoft", LogEventLevel.Information)
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
     .Enrich.FromLogContext()
     .Enrich.WithExceptionDetails()
     .WriteTo.Console()
@@ -72,8 +72,8 @@ try
         (context, services, configuration) =>
         {
             //https://github.com/serilog/serilog-aspnetcore#two-stage-initialization
-            configuration.ReadFrom
-                .Configuration(context.Configuration)
+            configuration
+                .ReadFrom.Configuration(context.Configuration)
                 .ReadFrom.Services(services)
                 .Enrich.FromLogContext()
                 .WriteTo.Console();
@@ -83,9 +83,7 @@ try
     builder.AddAppProblemDetails();
 
     // Add services to the container.
-    builder.Services
-        .AddOptions<LeaderBoardOptions>()
-        .BindConfiguration(nameof(LeaderBoardOptions));
+    builder.Services.AddOptions<LeaderBoardOptions>().BindConfiguration(nameof(LeaderBoardOptions));
 
     // Add services to the container.
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -93,9 +91,7 @@ try
     builder.Services.AddSwaggerGen();
 
     builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
-    builder.Services.AddMediatR(
-        c => c.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly())
-    );
+    builder.Services.AddMediatR(c => c.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 
     builder.AddCustomRedis();
 
@@ -105,17 +101,10 @@ try
 
     builder.Services.AddEventStoreDB(policy, Assembly.GetExecutingAssembly());
 
-    builder.Services.AddTransient<
-        IAggregatesDomainEventsRequestStore,
-        AggregatesDomainEventsStore
-    >();
+    builder.Services.AddTransient<IAggregatesDomainEventsRequestStore, AggregatesDomainEventsStore>();
 
-    builder.AddPostgresDbContext<LeaderBoardReadDbContext>(
-        migrationAssembly: typeof(MigrationRootMetadata).Assembly
-    );
-    builder.AddPostgresDbContext<InboxOutboxDbContext>(
-        migrationAssembly: typeof(MigrationRootMetadata).Assembly
-    );
+    builder.AddPostgresDbContext<LeaderBoardReadDbContext>(migrationAssembly: typeof(MigrationRootMetadata).Assembly);
+    builder.AddPostgresDbContext<InboxOutboxDbContext>(migrationAssembly: typeof(MigrationRootMetadata).Assembly);
 
     builder.Services.AddTransient<ISeeder, DataSeeder>();
     builder.Services.AddTransient<IPlayerScoreService, PlayerScoreService>();
@@ -162,9 +151,7 @@ try
 
     var app = builder.Build();
 
-    app.UseExceptionHandler(
-        options: new ExceptionHandlerOptions { AllowStatusCode404Response = true }
-    );
+    app.UseExceptionHandler(options: new ExceptionHandlerOptions { AllowStatusCode404Response = true });
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("test"))
@@ -175,8 +162,7 @@ try
 
     app.UseSerilogRequestLogging();
 
-    var scoreGroup = app.MapGroup("global-board/scores")
-        .WithTags(nameof(PlayerScoreReadModel).Pluralize());
+    var scoreGroup = app.MapGroup("global-board/scores").WithTags(nameof(PlayerScoreReadModel).Pluralize());
     scoreGroup.MapGetGlobalScoreAndRankEndpoint();
     scoreGroup.MapGetPlayerGroupGlobalScoresAndRanksEndpoint();
     scoreGroup.MapGetRangeScoresAndRanksEndpoint();
@@ -191,8 +177,7 @@ try
 
     using (var scope = app.Services.CreateScope())
     {
-        var leaderBoardDbContext =
-            scope.ServiceProvider.GetRequiredService<LeaderBoardReadDbContext>();
+        var leaderBoardDbContext = scope.ServiceProvider.GetRequiredService<LeaderBoardReadDbContext>();
         await leaderBoardDbContext.Database.MigrateAsync();
 
         var inboxOutboxDbContext = scope.ServiceProvider.GetRequiredService<InboxOutboxDbContext>();
@@ -261,18 +246,12 @@ finally
     Log.CloseAndFlush();
 }
 
-static IServiceCollection AddInternalEventBus(
-    IServiceCollection services,
-    AsyncPolicy? asyncPolicy = null
-)
+static IServiceCollection AddInternalEventBus(IServiceCollection services, AsyncPolicy? asyncPolicy = null)
 {
-    services.AddSingleton(
-        sp =>
-            new InternalEventBus(
-                sp.GetRequiredService<IMediator>(),
-                asyncPolicy ?? Policy.NoOpAsync()
-            )
-    );
+    services.AddSingleton(sp => new InternalEventBus(
+        sp.GetRequiredService<IMediator>(),
+        asyncPolicy ?? Policy.NoOpAsync()
+    ));
     services.TryAddSingleton<IInternalEventBus>(sp => sp.GetRequiredService<InternalEventBus>());
 
     return services;

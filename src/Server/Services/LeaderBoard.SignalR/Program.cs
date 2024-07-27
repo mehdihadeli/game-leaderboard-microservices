@@ -21,8 +21,8 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Exceptions;
 
-Log.Logger = new LoggerConfiguration().MinimumLevel
-    .Override("Microsoft", LogEventLevel.Information)
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
     .Enrich.FromLogContext()
     .Enrich.WithExceptionDetails()
     .WriteTo.Console()
@@ -36,8 +36,8 @@ try
         (context, services, configuration) =>
         {
             //https://github.com/serilog/serilog-aspnetcore#two-stage-initialization
-            configuration.ReadFrom
-                .Configuration(context.Configuration)
+            configuration
+                .ReadFrom.Configuration(context.Configuration)
                 .ReadFrom.Services(services)
                 .Enrich.FromLogContext()
                 .WriteTo.Console();
@@ -63,8 +63,8 @@ try
     JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
     JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
     var jwtOptions = builder.Configuration.BindOptions<JwtOptions>();
-    builder.Services
-        .AddAuthentication(options =>
+    builder
+        .Services.AddAuthentication(options =>
         {
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -92,9 +92,7 @@ try
 
     builder.Services.AddTransient<IHubService, HubService>();
 
-    builder.AddPostgresDbContext<InboxOutboxDbContext>(
-        migrationAssembly: typeof(MigrationRootMetadata).Assembly
-    );
+    builder.AddPostgresDbContext<InboxOutboxDbContext>(migrationAssembly: typeof(MigrationRootMetadata).Assembly);
 
     builder.Services.AddMassTransit(x =>
     {
@@ -153,9 +151,7 @@ try
 
     if (app.Environment.IsProduction())
     {
-        app.UseExceptionHandler(
-            options: new ExceptionHandlerOptions { AllowStatusCode404Response = true }
-        );
+        app.UseExceptionHandler(options: new ExceptionHandlerOptions { AllowStatusCode404Response = true });
     }
 
     // Configure the HTTP request pipeline.

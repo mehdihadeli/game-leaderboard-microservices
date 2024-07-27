@@ -35,12 +35,7 @@ public static class ObjectExtensions
     {
         var method = instanceObject
             .GetType()
-            .GetGenericMethod(
-                methodName,
-                genericTypes,
-                parameters.Select(y => y.GetType()).ToArray(),
-                returnType
-            );
+            .GetGenericMethod(methodName, genericTypes, parameters.Select(y => y.GetType()).ToArray(), returnType);
 
         if (method == null)
         {
@@ -69,13 +64,7 @@ public static class ObjectExtensions
         params object[] parameters
     )
     {
-        dynamic? awaitable = InvokeGenericMethod(
-            instanceObject,
-            methodName,
-            genericTypes,
-            returnType,
-            parameters
-        );
+        dynamic? awaitable = InvokeGenericMethod(instanceObject, methodName, genericTypes, returnType, parameters);
 
         return awaitable;
     }
@@ -87,21 +76,14 @@ public static class ObjectExtensions
     /// <param name="methodName"></param>
     /// <param name="parameters"></param>
     /// <returns></returns>
-    public static dynamic InvokeMethod(
-        this object instanceObject,
-        string methodName,
-        params object[] parameters
-    )
+    public static dynamic InvokeMethod(this object instanceObject, string methodName, params object[] parameters)
     {
         var method = instanceObject
             .GetType()
             .GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance)
             .Where(x => x.Name == methodName)
-            .FirstOrDefault(
-                x =>
-                    x.GetParameters()
-                        .Select(p => p.ParameterType)
-                        .All(parameters.Select(p => p.GetType()).Contains)
+            .FirstOrDefault(x =>
+                x.GetParameters().Select(p => p.ParameterType).All(parameters.Select(p => p.GetType()).Contains)
             );
 
         if (method is null)

@@ -70,12 +70,7 @@ internal class AddOrUpdatePlayerScoreHandler : IRequestHandler<AddOrUpdatePlayer
             else
             {
                 // update existing aggregate
-                playerScore.Update(
-                    request.Score,
-                    request.FirstName,
-                    request.LastName,
-                    request.Country
-                );
+                playerScore.Update(request.Score, request.FirstName, request.LastName, request.Country);
             }
             //https://www.gomomento.com/blog/6-common-caching-design-patterns-to-execute-your-caching-strategy
             // write-aside caching: rather than lazily loading items into our cache after accessing it for the first time, we are proactively pushing data to our cache when we write it.
@@ -120,11 +115,7 @@ internal class AddOrUpdatePlayerScoreHandler : IRequestHandler<AddOrUpdatePlayer
             var transaction = _redisDatabase.CreateTransaction();
 
             // increment score and calculation rank in redis
-            var newScoreTask = transaction.SortedSetIncrementAsync(
-                request.LeaderBoardName,
-                key,
-                request.Score
-            );
+            var newScoreTask = transaction.SortedSetIncrementAsync(request.LeaderBoardName, key, request.Score);
 
             // because ranks will change very fast between players, storing it in primary database is useless
             var rankTask = transaction.SortedSetRankAsync(
@@ -139,10 +130,7 @@ internal class AddOrUpdatePlayerScoreHandler : IRequestHandler<AddOrUpdatePlayer
                 new HashEntry[]
                 {
                     new(nameof(PlayerScoreReadModel.PlayerId).Underscore(), request.Id.ToString()),
-                    new(
-                        nameof(PlayerScoreReadModel.LeaderBoardName).Underscore(),
-                        request.LeaderBoardName
-                    ),
+                    new(nameof(PlayerScoreReadModel.LeaderBoardName).Underscore(), request.LeaderBoardName),
                     new(nameof(PlayerScoreReadModel.Score).Underscore(), request.Score),
                     new(nameof(PlayerScoreReadModel.Country).Underscore(), request.Country),
                     new(nameof(PlayerScoreReadModel.FirstName).Underscore(), request.FirstName),
@@ -208,11 +196,7 @@ internal class AddOrUpdatePlayerScoreHandler : IRequestHandler<AddOrUpdatePlayer
             var transaction = _redisDatabase.CreateTransaction();
 
             // increment score and calculation rank in redis
-            var newScoreTask = transaction.SortedSetIncrementAsync(
-                request.LeaderBoardName,
-                key,
-                request.Score
-            );
+            var newScoreTask = transaction.SortedSetIncrementAsync(request.LeaderBoardName, key, request.Score);
 
             // because ranks will change very fast between players, storing it in primary database is useless
             var rankTask = transaction.SortedSetRankAsync(

@@ -4,8 +4,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace LeaderBoard.SharedKernel.Postgres;
 
-public abstract class DbContextDesignFactoryBase<TDbContext>
-    : IDesignTimeDbContextFactory<TDbContext>
+public abstract class DbContextDesignFactoryBase<TDbContext> : IDesignTimeDbContextFactory<TDbContext>
     where TDbContext : DbContext
 {
     private readonly string _connectionStringSection;
@@ -21,8 +20,7 @@ public abstract class DbContextDesignFactoryBase<TDbContext>
     {
         Console.WriteLine($"BaseDirectory: {AppContext.BaseDirectory}");
 
-        var environmentName =
-            _env ?? Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "test";
+        var environmentName = _env ?? Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "test";
 
         var builder = new ConfigurationBuilder()
             .SetBasePath(AppContext.BaseDirectory ?? "")
@@ -36,9 +34,7 @@ public abstract class DbContextDesignFactoryBase<TDbContext>
 
         if (string.IsNullOrWhiteSpace(connectionStringSectionValue))
         {
-            throw new InvalidOperationException(
-                $"Could not find a value for {_connectionStringSection} section."
-            );
+            throw new InvalidOperationException($"Could not find a value for {_connectionStringSection} section.");
         }
 
         Console.WriteLine($"ConnectionString  section value is : {connectionStringSectionValue}");

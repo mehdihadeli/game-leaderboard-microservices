@@ -46,9 +46,7 @@ public abstract class EventSourcedAggregate<TId> : Entity<TId>, IEventSourcedAgg
         }
         else
         {
-            throw new AggregateException(
-                $"Can't find 'Apply' method for domain event: '{@event.GetType().Name}'"
-            );
+            throw new AggregateException($"Can't find 'Apply' method for domain event: '{@event.GetType().Name}'");
         }
     }
 

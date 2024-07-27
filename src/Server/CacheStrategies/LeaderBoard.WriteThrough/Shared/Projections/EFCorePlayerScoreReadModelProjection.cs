@@ -45,22 +45,16 @@ public class EFCorePlayerScoreReadModelProjection : IReadProjection
     )
         where TEvent : IDomainEvent
     {
-        var entity = await _leaderBoardReadDbContext.FindAsync<PlayerScoreReadModel>(
-            playerId,
-            cancellationToken
-        );
+        var entity = await _leaderBoardReadDbContext.FindAsync<PlayerScoreReadModel>(playerId, cancellationToken);
 
         // if entity not exists, add it to DbContext
         if (entity is null)
         {
-            entity = (PlayerScoreReadModel)
-                Activator.CreateInstance(typeof(PlayerScoreReadModel), true)!;
+            entity = (PlayerScoreReadModel)Activator.CreateInstance(typeof(PlayerScoreReadModel), true)!;
 
             entity.When(@event);
 
-            await _leaderBoardReadDbContext
-                .Set<PlayerScoreReadModel>()
-                .AddAsync(entity, cancellationToken);
+            await _leaderBoardReadDbContext.Set<PlayerScoreReadModel>().AddAsync(entity, cancellationToken);
         }
         else
         {

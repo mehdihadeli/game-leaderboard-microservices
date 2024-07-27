@@ -5,6 +5,6 @@ namespace LeaderBoard.DbMigrator;
 
 public class InboxOutboxDbContextDesignFactory : DbContextDesignFactoryBase<InboxOutboxDbContext>
 {
-	public InboxOutboxDbContextDesignFactory()
-		: base($"{nameof(PostgresOptions)}:{nameof(PostgresOptions.ConnectionString)}") { }
+    public InboxOutboxDbContextDesignFactory()
+        : base($"{nameof(PostgresOptions)}:{nameof(PostgresOptions.ConnectionString)}") { }
 }

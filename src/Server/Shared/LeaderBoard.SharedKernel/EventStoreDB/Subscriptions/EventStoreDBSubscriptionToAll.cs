@@ -63,10 +63,7 @@ public class EventStoreDBSubscriptionToAll : BackgroundService
         return base.StopAsync(cancellationToken);
     }
 
-    private async Task SubscribeToAll(
-        EventStoreDBSubscriptionToAllOptions subscriptionOptions,
-        CancellationToken ct
-    )
+    private async Task SubscribeToAll(EventStoreDBSubscriptionToAllOptions subscriptionOptions, CancellationToken ct)
     {
         // see: https://github.com/dotnet/runtime/issues/36063
         await Task.Yield();
@@ -74,18 +71,13 @@ public class EventStoreDBSubscriptionToAll : BackgroundService
         _subscriptionOptions = subscriptionOptions;
         _cancellationToken = ct;
 
-        _logger.LogInformation(
-            "Subscription to all '{SubscriptionId}'",
-            subscriptionOptions.SubscriptionId
-        );
+        _logger.LogInformation("Subscription to all '{SubscriptionId}'", subscriptionOptions.SubscriptionId);
 
         var checkpoint = await _checkpointRepository.Load(SubscriptionId, ct).ConfigureAwait(false);
 
         await _eventStoreClient
             .SubscribeToAllAsync(
-                checkpoint == null
-                    ? FromAll.Start
-                    : FromAll.After(new Position(checkpoint.Value, checkpoint.Value)),
+                checkpoint == null ? FromAll.Start : FromAll.After(new Position(checkpoint.Value, checkpoint.Value)),
                 HandleEvent,
                 subscriptionOptions.ResolveLinkTos,
                 HandleDrop,
@@ -118,10 +110,7 @@ public class EventStoreDBSubscriptionToAll : BackgroundService
                 // then we might get events that are from other module and we might not be able to deserialize them.
                 // In that case it's safe to ignore deserialization error.
                 // You may add more sophisticated logic checking if it should be ignored or not.
-                _logger.LogWarning(
-                    "Couldn't deserialize event with id: {EventId}",
-                    resolvedEvent.Event.EventId
-                );
+                _logger.LogWarning("Couldn't deserialize event with id: {EventId}", resolvedEvent.Event.EventId);
 
                 if (!_subscriptionOptions.IgnoreDeserializationErrors)
                     throw new InvalidOperationException(
@@ -137,26 +126,17 @@ public class EventStoreDBSubscriptionToAll : BackgroundService
                     async (_, ct) =>
                     {
                         // publish event to internal event bus
-                        await _internalEventBus
-                            .Publish(streamEvent, _cancellationToken)
-                            .ConfigureAwait(false);
+                        await _internalEventBus.Publish(streamEvent, _cancellationToken).ConfigureAwait(false);
 
                         await _projectionPublisher.PublishAsync(streamEvent, _cancellationToken);
 
                         await _checkpointRepository
-                            .Store(
-                                SubscriptionId,
-                                resolvedEvent.Event.Position.CommitPosition,
-                                _cancellationToken
-                            )
+                            .Store(SubscriptionId, resolvedEvent.Event.Position.CommitPosition, _cancellationToken)
                             .ConfigureAwait(false);
                     },
                     new StartActivityOptions
                     {
-                        Tags =
-                        {
-                            { TelemetryTags.EventHandling.Event, streamEvent.Data.GetType() }
-                        },
+                        Tags = { { TelemetryTags.EventHandling.Event, streamEvent.Data.GetType() } },
                         Parent = streamEvent.Metadata.PropagationContext?.ActivityContext,
                         Kind = ActivityKind.Consumer
                     },
@@ -177,18 +157,11 @@ public class EventStoreDBSubscriptionToAll : BackgroundService
         }
     }
 
-    private void HandleDrop(
-        StreamSubscription _,
-        SubscriptionDroppedReason reason,
-        Exception? exception
-    )
+    private void HandleDrop(StreamSubscription _, SubscriptionDroppedReason reason, Exception? exception)
     {
         if (exception is RpcException { StatusCode: StatusCode.Cancelled })
         {
-            _logger.LogWarning(
-                "Subscription to all '{SubscriptionId}' dropped by client",
-                SubscriptionId
-            );
+            _logger.LogWarning("Subscription to all '{SubscriptionId}' dropped by client", SubscriptionId);
 
             return;
         }
@@ -221,8 +194,7 @@ public class EventStoreDBSubscriptionToAll : BackgroundService
                 using (NoSynchronizationContextScope.Enter())
                 {
 #pragma warning disable VSTHRD002
-                    SubscribeToAll(_subscriptionOptions, _cancellationToken)
-                        .Wait(_cancellationToken);
+                    SubscribeToAll(_subscriptionOptions, _cancellationToken).Wait(_cancellationToken);
 #pragma warning restore VSTHRD002
                 }
 

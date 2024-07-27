@@ -6,9 +6,7 @@ public class EventStoreDomainEventAccessor : IDomainEventsAccessor
 {
     private readonly IAggregatesDomainEventsRequestStore _aggregatesDomainEventsStore;
 
-    public EventStoreDomainEventAccessor(
-        IAggregatesDomainEventsRequestStore aggregatesDomainEventsStore
-    )
+    public EventStoreDomainEventAccessor(IAggregatesDomainEventsRequestStore aggregatesDomainEventsStore)
     {
         _aggregatesDomainEventsStore = aggregatesDomainEventsStore;
     }

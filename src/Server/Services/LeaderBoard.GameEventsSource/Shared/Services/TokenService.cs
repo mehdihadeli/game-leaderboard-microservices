@@ -40,10 +40,7 @@ public class TokenService : ITokenService
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
             new Claim(JwtRegisteredClaimNames.GivenName, $"{user.FirstName} {user.LastName}"),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim(
-                JwtRegisteredClaimNames.Iat,
-                now.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture)
-            ),
+            new Claim(JwtRegisteredClaimNames.Iat, now.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture)),
         };
 
         if (roles != null && roles.Any())
@@ -54,19 +51,12 @@ public class TokenService : ITokenService
             }
         }
 
-        SymmetricSecurityKey signingKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(_jwtOptions.Key)
-        );
-        SigningCredentials signingCredentials = new SigningCredentials(
-            signingKey,
-            SecurityAlgorithms.HmacSha256
-        );
+        SymmetricSecurityKey signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.Key));
+        SigningCredentials signingCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {
-            Subject = new ClaimsIdentity(
-                new Claim[] { new(ClaimTypes.NameIdentifier, user.Id.ToString()) }
-            ),
+            Subject = new ClaimsIdentity(new Claim[] { new(ClaimTypes.NameIdentifier, user.Id.ToString()) }),
             Expires = now.AddMinutes(_jwtOptions.TokenLifeTimeInMinute),
             SigningCredentials = signingCredentials,
             Claims = claims.ConvertClaimsToDictionary(),
@@ -103,10 +93,7 @@ public class TokenService : ITokenService
 
         if (
             securityToken is not JwtSecurityToken jwtSecurityToken
-            || !jwtSecurityToken.Header.Alg.Equals(
-                SecurityAlgorithms.HmacSha256,
-                StringComparison.OrdinalIgnoreCase
-            )
+            || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.OrdinalIgnoreCase)
         )
         {
             throw new SecurityTokenException("Invalid access token.");

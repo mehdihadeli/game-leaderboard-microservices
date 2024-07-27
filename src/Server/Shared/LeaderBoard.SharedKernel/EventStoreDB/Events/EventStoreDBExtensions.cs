@@ -13,7 +13,8 @@ public static class EventStoreDBExtensions
         Func<TEntity, object, TEntity> when,
         string id,
         CancellationToken cancellationToken
-    ) where TEntity: class
+    )
+        where TEntity : class
     {
         var readResult = eventStore.ReadStreamAsync(
             Direction.Forwards,
@@ -27,11 +28,8 @@ public static class EventStoreDBExtensions
 
         return await readResult
             .Select(@event => @event.Deserialize()!)
-            .AggregateAsync(
-                ObjectFactory<TEntity>.GetDefaultOrUninitialized(),
-                when,
-                cancellationToken
-            ).ConfigureAwait(false);
+            .AggregateAsync(ObjectFactory<TEntity>.GetDefaultOrUninitialized(), when, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     public static async Task<TEntity> Find<TEntity>(
@@ -39,7 +37,8 @@ public static class EventStoreDBExtensions
         Func<TEntity> getDefault,
         Func<TEntity, object, TEntity> when,
         string id,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var readResult = eventStore.ReadStreamAsync(
             Direction.Forwards,
@@ -53,17 +52,15 @@ public static class EventStoreDBExtensions
 
         return await readResult
             .Select(@event => @event.Deserialize()!)
-            .AggregateAsync(
-                getDefault(),
-                when,
-                cancellationToken
-            ).ConfigureAwait(false);
+            .AggregateAsync(getDefault(), when, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     public static async Task<List<object>> ReadStream(
         this EventStoreClient eventStore,
         string id,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var readResult = eventStore.ReadStreamAsync(
             Direction.Forwards,
@@ -77,7 +74,8 @@ public static class EventStoreDBExtensions
 
         return await readResult
             .Select(@event => @event.Deserialize()!)
-            .ToListAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+            .ToListAsync(cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
     }
 
     public static async Task<ulong> Append(
@@ -86,17 +84,17 @@ public static class EventStoreDBExtensions
         object @event,
         CancellationToken cancellationToken
     )
-
     {
-        var result = await eventStore.AppendToStreamAsync(
-            id,
-            StreamState.NoStream,
-            new[] { @event.ToJsonEventData(TelemetryPropagator.GetPropagationContext()) },
-            cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        var result = await eventStore
+            .AppendToStreamAsync(
+                id,
+                StreamState.NoStream,
+                new[] { @event.ToJsonEventData(TelemetryPropagator.GetPropagationContext()) },
+                cancellationToken: cancellationToken
+            )
+            .ConfigureAwait(false);
         return result.NextExpectedStreamRevision;
     }
-
 
     public static async Task<ulong> Append(
         this EventStoreClient eventStore,
@@ -106,12 +104,14 @@ public static class EventStoreDBExtensions
         CancellationToken cancellationToken
     )
     {
-        var result = await eventStore.AppendToStreamAsync(
-            id,
-            expectedRevision,
-            new[] { @event.ToJsonEventData(TelemetryPropagator.GetPropagationContext()) },
-            cancellationToken: cancellationToken
-        ).ConfigureAwait(false);
+        var result = await eventStore
+            .AppendToStreamAsync(
+                id,
+                expectedRevision,
+                new[] { @event.ToJsonEventData(TelemetryPropagator.GetPropagationContext()) },
+                cancellationToken: cancellationToken
+            )
+            .ConfigureAwait(false);
 
         return result.NextExpectedStreamRevision;
     }
@@ -120,7 +120,8 @@ public static class EventStoreDBExtensions
         this EventStoreClient eventStore,
         string id,
         CancellationToken ct
-    ) where TEvent : class
+    )
+        where TEvent : class
     {
         var resolvedEvent = await eventStore.ReadLastEvent(id, ct).ConfigureAwait(false);
 
@@ -158,32 +159,28 @@ public static class EventStoreDBExtensions
     {
         var eventData = new[] { @event.ToJsonEventData() };
 
-        var result = await eventStore.AppendToStreamAsync(
-            id,
-            StreamState.StreamExists,
-            eventData,
-            options =>
-            {
-                options.ThrowOnAppendFailure = false;
-            },
-            cancellationToken: ct
-        ).ConfigureAwait(false);
+        var result = await eventStore
+            .AppendToStreamAsync(
+                id,
+                StreamState.StreamExists,
+                eventData,
+                options =>
+                {
+                    options.ThrowOnAppendFailure = false;
+                },
+                cancellationToken: ct
+            )
+            .ConfigureAwait(false);
 
         if (result is SuccessResult)
             return;
 
-        await eventStore.SetStreamMetadataAsync(
-            id,
-            StreamState.NoStream,
-            new StreamMetadata(maxCount: 1),
-            cancellationToken: ct
-        ).ConfigureAwait(false);
+        await eventStore
+            .SetStreamMetadataAsync(id, StreamState.NoStream, new StreamMetadata(maxCount: 1), cancellationToken: ct)
+            .ConfigureAwait(false);
 
-        await eventStore.AppendToStreamAsync(
-            id,
-            StreamState.NoStream,
-            eventData,
-            cancellationToken: ct
-        ).ConfigureAwait(false);
+        await eventStore
+            .AppendToStreamAsync(id, StreamState.NoStream, eventData, cancellationToken: ct)
+            .ConfigureAwait(false);
     }
 }

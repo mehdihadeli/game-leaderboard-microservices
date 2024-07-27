@@ -7,10 +7,7 @@ public static class LoginEndpoint
 {
     internal static RouteHandlerBuilder MapLoginUserEndpoint(this IEndpointRouteBuilder endpoints)
     {
-        return endpoints
-            .MapPost("/login", Handler)
-            .WithTags(nameof(Accounts))
-            .WithName(nameof(Login));
+        return endpoints.MapPost("/login", Handler).WithTags(nameof(Accounts)).WithName(nameof(Login));
 
         async Task<Results<Ok<LoginResponse>, ValidationProblem, ProblemHttpResult>> Handler(
             [AsParameters] LoginRequestParameters requestParameters
@@ -27,11 +24,7 @@ public static class LoginEndpoint
     }
 }
 
-internal record LoginRequestParameters(
-    LoginRequest Request,
-    IMediator Mediator,
-    CancellationToken CancellationToken
-);
+internal record LoginRequestParameters(LoginRequest Request, IMediator Mediator, CancellationToken CancellationToken);
 
 public record LoginRequest(string UserNameOrId, string Password);
 

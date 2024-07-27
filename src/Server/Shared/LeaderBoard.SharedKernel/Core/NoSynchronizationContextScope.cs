@@ -9,7 +9,7 @@ public static class NoSynchronizationContextScope
         return new Disposable(context);
     }
 
-    public struct Disposable: IDisposable
+    public struct Disposable : IDisposable
     {
         private readonly SynchronizationContext? synchronizationContext;
 
@@ -18,7 +18,6 @@ public static class NoSynchronizationContextScope
             this.synchronizationContext = synchronizationContext;
         }
 
-        public void Dispose() =>
-            SynchronizationContext.SetSynchronizationContext(synchronizationContext);
+        public void Dispose() => SynchronizationContext.SetSynchronizationContext(synchronizationContext);
     }
 }

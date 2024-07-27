@@ -7,32 +7,22 @@ namespace LeaderBoard.GameEventsSource.Accounts.GettingProfile;
 
 public static class GetProfileEndpoint
 {
-    internal static RouteHandlerBuilder MapGetProfileEndpoint(
-        this IEndpointRouteBuilder routeBuilder
-    )
+    internal static RouteHandlerBuilder MapGetProfileEndpoint(this IEndpointRouteBuilder routeBuilder)
     {
-        return routeBuilder
-            .MapGet("profile", Handle)
-            .WithTags(nameof(Accounts))
-            .WithName(nameof(GetProfile));
+        return routeBuilder.MapGet("profile", Handle).WithTags(nameof(Accounts)).WithName(nameof(GetProfile));
 
-        static async Task<
-            Results<Ok<GetProfileResponse>, ValidationProblem, ProblemHttpResult>
-        > Handle([AsParameters] GetProfileRequestParameter requestParameters)
+        static async Task<Results<Ok<GetProfileResponse>, ValidationProblem, ProblemHttpResult>> Handle(
+            [AsParameters] GetProfileRequestParameter requestParameters
+        )
         {
             var (mediator, httpContext, ct) = requestParameters;
 
-            string? userId = httpContext.User.Claims
-                .FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)
-                ?.Value;
+            string? userId = httpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
             var res = await mediator.Send(new GetProfile(userId), ct);
             if (res == null)
             {
-                return TypedResults.Problem(
-                    "Profile not found",
-                    statusCode: StatusCodes.Status404NotFound
-                );
+                return TypedResults.Problem("Profile not found", statusCode: StatusCodes.Status404NotFound);
             }
 
             var response = new GetProfileResponse(

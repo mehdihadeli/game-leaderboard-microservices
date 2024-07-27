@@ -5,23 +5,15 @@ using MediatR;
 
 namespace LeaderBoard.GameEventsSource.GameEvent.Features.CreatingGameEvent;
 
-public record CreateGameEvent(
-    Guid PlayerId,
-    double Score,
-    string FirstName,
-    string LastName,
-    string Country
-) : IRequest;
+public record CreateGameEvent(Guid PlayerId, double Score, string FirstName, string LastName, string Country)
+    : IRequest;
 
 internal class CreateGameEventHandler : IRequestHandler<CreateGameEvent>
 {
     private readonly IBusPublisher _busPublisher;
     private readonly ILogger<CreateGameEventHandler> _logger;
 
-    public CreateGameEventHandler(
-        IBusPublisher busPublisher,
-        ILogger<CreateGameEventHandler> logger
-    )
+    public CreateGameEventHandler(IBusPublisher busPublisher, ILogger<CreateGameEventHandler> logger)
     {
         _busPublisher = busPublisher;
         _logger = logger;

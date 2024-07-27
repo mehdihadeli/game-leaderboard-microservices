@@ -22,7 +22,8 @@ public class RedisPlayerScoreReadModelProjection : IReadProjection
     public RedisPlayerScoreReadModelProjection(
         IConnectionMultiplexer redisConnection,
         IBusPublisher busPublisher,
-        IOptions<LeaderBoardOptions> leaderBoardOptions)
+        IOptions<LeaderBoardOptions> leaderBoardOptions
+    )
     {
         _busPublisher = busPublisher;
         _leaderBoardOptions = leaderBoardOptions.Value;

@@ -20,24 +20,32 @@ public class EventTypeMapper
 
     public string ToName<TEventType>() => ToName(typeof(TEventType));
 
-    public string ToName(Type eventType) => typeNameMap.GetOrAdd(eventType, _ =>
-    {
-        var eventTypeName = eventType.FullName!;
+    public string ToName(Type eventType) =>
+        typeNameMap.GetOrAdd(
+            eventType,
+            _ =>
+            {
+                var eventTypeName = eventType.FullName!;
 
-        typeMap.TryAdd(eventTypeName, eventType);
+                typeMap.TryAdd(eventTypeName, eventType);
 
-        return eventTypeName;
-    });
+                return eventTypeName;
+            }
+        );
 
-    public Type? ToType(string eventTypeName) => typeMap.GetOrAdd(eventTypeName, _ =>
-    {
-        var type = TypeProvider.GetFirstMatchingTypeFromCurrentDomainAssembly(eventTypeName);
+    public Type? ToType(string eventTypeName) =>
+        typeMap.GetOrAdd(
+            eventTypeName,
+            _ =>
+            {
+                var type = TypeProvider.GetFirstMatchingTypeFromCurrentDomainAssembly(eventTypeName);
 
-        if (type == null)
-            return null;
+                if (type == null)
+                    return null;
 
-        typeNameMap.TryAdd(type, eventTypeName);
+                typeNameMap.TryAdd(type, eventTypeName);
 
-        return type;
-    });
+                return type;
+            }
+        );
 }

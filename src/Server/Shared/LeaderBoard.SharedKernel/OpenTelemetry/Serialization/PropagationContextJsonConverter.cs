@@ -4,7 +4,7 @@ using OpenTelemetry.Context.Propagation;
 
 namespace LeaderBoard.SharedKernel.OpenTelemetry.Serialization;
 
-public class PropagationContextJsonConverter: JsonConverter
+public class PropagationContextJsonConverter : JsonConverter
 {
     private const string TraceParentPropertyName = "traceparent";
     private const string TraceStatePropertyName = "tracestate";
@@ -32,8 +32,12 @@ public class PropagationContextJsonConverter: JsonConverter
         writer.WriteValue(value);
     }
 
-    public override object ReadJson(JsonReader reader, Type objectType, object? existingValue,
-        JsonSerializer serializer)
+    public override object ReadJson(
+        JsonReader reader,
+        Type objectType,
+        object? existingValue,
+        JsonSerializer serializer
+    )
     {
         var jObject = JObject.Load(reader);
 
@@ -49,8 +53,10 @@ public class PropagationContextJsonConverter: JsonConverter
         return parentContext;
     }
 
-    private static IEnumerable<string> ExtractTraceContextFromEventMetadata(Dictionary<string, string?> headers,
-        string key)
+    private static IEnumerable<string> ExtractTraceContextFromEventMetadata(
+        Dictionary<string, string?> headers,
+        string key
+    )
     {
         try
         {

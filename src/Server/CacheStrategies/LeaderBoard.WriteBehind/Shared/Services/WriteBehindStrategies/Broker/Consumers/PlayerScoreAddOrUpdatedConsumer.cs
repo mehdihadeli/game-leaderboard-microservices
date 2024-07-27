@@ -28,10 +28,7 @@ public class PlayerScoreAddOrUpdatedConsumer : IConsumer<PlayerScoreAddOrUpdated
         _logger.LogInformation("PlayerScoreAdded message received from rabbitmq server");
         if (!_writeBehindOptions.UseBrokerWriteBehind)
         {
-            _logger.LogInformation(
-                "Message {Message} dropped from rabbitmq server",
-                context.Message
-            );
+            _logger.LogInformation("Message {Message} dropped from rabbitmq server", context.Message);
             return;
         }
 

@@ -19,9 +19,7 @@ public static partial class ServiceCollectionExtensions
         params Assembly[] scanAssemblies
     )
     {
-        var assembliesToScan = scanAssemblies.Any()
-            ? scanAssemblies
-            : new[] { Assembly.GetCallingAssembly(), };
+        var assembliesToScan = scanAssemblies.Any() ? scanAssemblies : new[] { Assembly.GetCallingAssembly(), };
 
         return services.AddEventSourcing<InMemoryEventStore>(assembliesToScan, asyncPolicy);
     }
@@ -53,42 +51,32 @@ public static partial class ServiceCollectionExtensions
     {
         services.AddSingleton<IReadProjectionPublisher, ReadProjectionPublisher>();
 
-        services.AddSingleton<IProjectionPublisher, ProjectionPublisher>(
-            sp =>
-                new ProjectionPublisher(
-                    sp,
-                    sp.GetRequiredService<IActivityScope>(),
-                    asyncPolicy ?? Policy.NoOpAsync()
-                )
-        );
-        var assembliesToScan = assemblies.Any()
-            ? assemblies
-            : new[] { Assembly.GetEntryAssembly() };
+        services.AddSingleton<IProjectionPublisher, ProjectionPublisher>(sp => new ProjectionPublisher(
+            sp,
+            sp.GetRequiredService<IActivityScope>(),
+            asyncPolicy ?? Policy.NoOpAsync()
+        ));
+        var assembliesToScan = assemblies.Any() ? assemblies : new[] { Assembly.GetEntryAssembly() };
 
         RegisterReadProjections(services, assembliesToScan!);
 
         return services;
     }
 
-    private static void RegisterReadProjections(
-        this IServiceCollection services,
-        params Assembly[] assembliesToScan
-    )
+    private static void RegisterReadProjections(this IServiceCollection services, params Assembly[] assembliesToScan)
     {
-        services.Scan(
-            scan =>
-                scan.FromAssemblies(assembliesToScan)
-                    .AddClasses(classes => classes.AssignableTo<IReadProjection>()) // Filter classes
-                    .AsImplementedInterfaces()
-                    .WithTransientLifetime()
+        services.Scan(scan =>
+            scan.FromAssemblies(assembliesToScan)
+                .AddClasses(classes => classes.AssignableTo<IReadProjection>()) // Filter classes
+                .AsImplementedInterfaces()
+                .WithTransientLifetime()
         );
 
-        services.Scan(
-            scan =>
-                scan.FromAssemblies(assembliesToScan)
-                    .AddClasses(classes => classes.AssignableTo<IHaveReadProjection>()) // Filter classes
-                    .AsImplementedInterfaces()
-                    .WithTransientLifetime()
+        services.Scan(scan =>
+            scan.FromAssemblies(assembliesToScan)
+                .AddClasses(classes => classes.AssignableTo<IHaveReadProjection>()) // Filter classes
+                .AsImplementedInterfaces()
+                .WithTransientLifetime()
         );
     }
 }

@@ -16,14 +16,11 @@ public static class GetPlayerGroupGlobalScoresAndRanksEndpoint
             .WithTags(nameof(PlayerScores))
             .WithName(nameof(GetPlayerGroupGlobalScoresAndRanks));
 
-        static async Task<
-            Results<Ok<IList<PlayerScoreWithNeighborsDto>>, ValidationProblem>
-        > Handle(
+        static async Task<Results<Ok<IList<PlayerScoreWithNeighborsDto>>, ValidationProblem>> Handle(
             [AsParameters] GetPlayerGroupGlobalScoresAndRanksRequestParameter requestParameters
         )
         {
-            var (mediator, cancellationToken, playerIds, leaderboardName, isDesc) =
-                requestParameters;
+            var (mediator, cancellationToken, playerIds, leaderboardName, isDesc) = requestParameters;
             var res = await mediator.Send(
                 new GetPlayerGroupGlobalScoresAndRanks(playerIds, leaderboardName, isDesc),
                 cancellationToken

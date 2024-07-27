@@ -28,8 +28,8 @@ public class HubService : IHubService
     {
         var playersList = players.ToList();
 
-        var connectedUsers = playersList.Where(
-            playerId => StronglyTypedPlayerScoreHub.UsersConnections.ContainsKey(playerId)
+        var connectedUsers = playersList.Where(playerId =>
+            StronglyTypedPlayerScoreHub.UsersConnections.ContainsKey(playerId)
         );
 
         var playersScore = await _gameEventProcessorClient.GetPlayerGroupGlobalScoresAndRanks(

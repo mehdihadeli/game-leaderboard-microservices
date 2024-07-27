@@ -12,7 +12,8 @@ public static class AggregateStreamExtensions
         Guid id,
         CancellationToken cancellationToken,
         ulong? fromVersion = null
-    ) where T : class, IProjection
+    )
+        where T : class, IProjection
     {
         var readResult = eventStore.ReadStreamAsync(
             Direction.Forwards,

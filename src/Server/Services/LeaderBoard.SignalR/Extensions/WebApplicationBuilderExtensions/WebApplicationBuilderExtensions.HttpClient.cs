@@ -13,20 +13,16 @@ public static partial class WebApplicationBuilderExtensions
         return builder;
     }
 
-    private static WebApplicationBuilder AddGameEventProcessorClient(
-        this WebApplicationBuilder builder
-    )
+    private static WebApplicationBuilder AddGameEventProcessorClient(this WebApplicationBuilder builder)
     {
         builder.Services.AddValidatedOptions<GameEventProcessorClientOptions>();
 
-        builder.Services
-            .AddHttpClient<IGameEventProcessorClient, GameEventProcessorClient>()
+        builder
+            .Services.AddHttpClient<IGameEventProcessorClient, GameEventProcessorClient>()
             .ConfigureHttpClient(
                 (sp, httpClient) =>
                 {
-                    var httpClientOptions = sp.GetRequiredService<
-                        IOptions<GameEventProcessorClientOptions>
-                    >().Value;
+                    var httpClientOptions = sp.GetRequiredService<IOptions<GameEventProcessorClientOptions>>().Value;
                     httpClient.BaseAddress = new Uri(httpClientOptions.BaseAddress);
                     httpClient.Timeout = TimeSpan.FromSeconds(httpClientOptions.Timeout);
                 }

@@ -18,11 +18,15 @@ public class StreamNameMapper
 
     public static string ToStreamPrefix<TStream>() => ToStreamPrefix(typeof(TStream));
 
-    public static string ToStreamPrefix(Type streamType) => Instance.TypeNameMap.GetOrAdd(streamType, _ =>
-    {
-        var modulePrefix = streamType.Namespace!.Split(".").First();
-        return $"{modulePrefix}_{streamType.Name}";
-    });
+    public static string ToStreamPrefix(Type streamType) =>
+        Instance.TypeNameMap.GetOrAdd(
+            streamType,
+            _ =>
+            {
+                var modulePrefix = streamType.Namespace!.Split(".").First();
+                return $"{modulePrefix}_{streamType.Name}";
+            }
+        );
 
     public static string ToStreamId<TStream>(object aggregateId, object? tenantId = null) =>
         ToStreamId(typeof(TStream), aggregateId);
@@ -37,12 +41,11 @@ public class StreamNameMapper
     /// <returns></returns>
     public static string ToStreamId(Type streamType, object aggregateId, object? tenantId = null)
     {
-        var tenantPrefix = tenantId != null ? $"{tenantId}_"  : "";
+        var tenantPrefix = tenantId != null ? $"{tenantId}_" : "";
         var streamCategory = ToStreamPrefix(streamType);
 
         // (Out-of-the box, the category projection treats anything before a `-` separator as the category name)
         // For this reason, we place the "{tenantId}_" bit (if present) on the right hand side of the '-'
         return $"{streamCategory}-{tenantPrefix}{aggregateId}";
     }
-
 }

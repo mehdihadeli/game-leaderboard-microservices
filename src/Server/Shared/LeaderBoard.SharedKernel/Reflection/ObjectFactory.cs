@@ -25,7 +25,12 @@ public static class ObjectFactory
 {
     public static bool HasDefaultConstructor(this Type t)
     {
-        return t.IsValueType || t.GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
-            null, Type.EmptyTypes, null) != null;
+        return t.IsValueType
+            || t.GetConstructor(
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                null,
+                Type.EmptyTypes,
+                null
+            ) != null;
     }
 }

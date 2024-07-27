@@ -15,10 +15,7 @@ public interface IAggregateStore
     /// <param name="aggregateId">InternalCommandId of aggregate.</param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <returns>Task with aggregate as result.</returns>
-    Task<TAggregate?> GetAsync<TAggregate, TId>(
-        TId aggregateId,
-        CancellationToken cancellationToken = default
-    )
+    Task<TAggregate?> GetAsync<TAggregate, TId>(TId aggregateId, CancellationToken cancellationToken = default)
         where TAggregate : class, IEventSourcedAggregate<TId>;
 
     /// <summary>
@@ -45,10 +42,7 @@ public interface IAggregateStore
     /// <param name="aggregate">Aggregate object to be saved.</param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <returns>Task of operation.</returns>
-    Task<AppendResult> StoreAsync<TAggregate, TId>(
-        TAggregate aggregate,
-        CancellationToken cancellationToken = default
-    )
+    Task<AppendResult> StoreAsync<TAggregate, TId>(TAggregate aggregate, CancellationToken cancellationToken = default)
         where TAggregate : class, IEventSourcedAggregate<TId>;
 
     /// <summary>
@@ -59,9 +53,6 @@ public interface IAggregateStore
     /// <typeparam name="TAggregate"></typeparam>
     /// <typeparam name="TId"></typeparam>
     /// <returns></returns>
-    Task<bool> Exists<TAggregate, TId>(
-        TId aggregateId,
-        CancellationToken cancellationToken = default
-    )
+    Task<bool> Exists<TAggregate, TId>(TId aggregateId, CancellationToken cancellationToken = default)
         where TAggregate : class, IEventSourcedAggregate<TId>;
 }

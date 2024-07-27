@@ -8,18 +8,12 @@ namespace LeaderBoard.SharedKernel.Contracts.Data.EventStore.Projections;
 // https://www.eventstore.com/blog/event-sourcing-and-cqrs
 public interface IReadProjection
 {
-    Task ProjectAsync<TEvent>(
-        IStreamEvent<TEvent> streamEvent,
-        CancellationToken cancellationToken = default
-    )
+    Task ProjectAsync<TEvent>(IStreamEvent<TEvent> streamEvent, CancellationToken cancellationToken = default)
         where TEvent : IDomainEvent;
 }
 
 public interface IReadProjection<in TEvent>
     where TEvent : IDomainEvent
 {
-    Task ProjectAsync(
-        IStreamEvent<TEvent> streamEvent,
-        CancellationToken cancellationToken = default
-    );
+    Task ProjectAsync(IStreamEvent<TEvent> streamEvent, CancellationToken cancellationToken = default);
 }

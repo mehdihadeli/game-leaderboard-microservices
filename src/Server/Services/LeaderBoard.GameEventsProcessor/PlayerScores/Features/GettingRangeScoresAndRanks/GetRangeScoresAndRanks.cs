@@ -20,8 +20,7 @@ public record GetRangeScoresAndRanks(
     bool IsDesc = true
 ) : IRequest<IList<PlayerScoreDto>?>;
 
-internal class GetRangeScoresAndRanksHandler
-    : IRequestHandler<GetRangeScoresAndRanks, IList<PlayerScoreDto>?>
+internal class GetRangeScoresAndRanksHandler : IRequestHandler<GetRangeScoresAndRanks, IList<PlayerScoreDto>?>
 {
     private readonly LeaderBoardReadDbContext _leaderBoardReadDbContext;
     private readonly IReadThroughClient _readThroughClient;
@@ -79,12 +78,12 @@ internal class GetRangeScoresAndRanksHandler
             // https://developers.eventstore.com/server/v22.10/projections.html#streams-projection
             // if data is not available on the cache, First read from EF postgres database as backup database and then if not exists read from primary database EventStoreDB (but we have some limitations reading all streams and filtering!)
             IQueryable<PlayerScoreReadModel> postgresItems = request.IsDesc
-                ? _leaderBoardReadDbContext.PlayerScores
-                    .AsNoTracking()
+                ? _leaderBoardReadDbContext
+                    .PlayerScores.AsNoTracking()
                     .Where(x => x.LeaderBoardName == Constants.GlobalLeaderBoard)
                     .OrderByDescending(x => x.Score)
-                : _leaderBoardReadDbContext.PlayerScores
-                    .AsNoTracking()
+                : _leaderBoardReadDbContext
+                    .PlayerScores.AsNoTracking()
                     .Where(x => x.LeaderBoardName == Constants.GlobalLeaderBoard)
                     .OrderBy(x => x.Score);
 

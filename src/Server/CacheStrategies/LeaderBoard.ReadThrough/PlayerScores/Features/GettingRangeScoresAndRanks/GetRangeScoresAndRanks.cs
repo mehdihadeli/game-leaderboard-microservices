@@ -13,8 +13,7 @@ internal record GetRangeScoresAndRanks(
     bool IsDesc = true
 ) : IRequest<IList<PlayerScoreDto>?>;
 
-internal class GetRangeScoresAndRanksHandler
-    : IRequestHandler<GetRangeScoresAndRanks, IList<PlayerScoreDto>?>
+internal class GetRangeScoresAndRanksHandler : IRequestHandler<GetRangeScoresAndRanks, IList<PlayerScoreDto>?>
 {
     private readonly IReadThrough _readThrough;
 

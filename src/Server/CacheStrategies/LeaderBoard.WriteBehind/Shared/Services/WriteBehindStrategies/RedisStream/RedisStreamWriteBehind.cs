@@ -73,9 +73,7 @@ public class RedisStreamWriteBehind : IWriteBehind
                 .SingleOrDefault(x => x.Name == nameof(PlayerScoreReadModel.PlayerId).Underscore())
                 .Value;
             string? leaderboardName = values
-                .SingleOrDefault(
-                    x => x.Name == nameof(PlayerScoreReadModel.LeaderBoardName).Underscore()
-                )
+                .SingleOrDefault(x => x.Name == nameof(PlayerScoreReadModel.LeaderBoardName).Underscore())
                 .Value;
             string? firstName = values
                 .SingleOrDefault(x => x.Name == nameof(PlayerScoreReadModel.FirstName).Underscore())
@@ -87,9 +85,7 @@ public class RedisStreamWriteBehind : IWriteBehind
                 .SingleOrDefault(x => x.Name == nameof(PlayerScoreReadModel.Country).Underscore())
                 .Value;
             double? score = (double?)
-                values
-                    .SingleOrDefault(x => x.Name == nameof(PlayerScoreReadModel.Score).Underscore())
-                    .Value;
+                values.SingleOrDefault(x => x.Name == nameof(PlayerScoreReadModel.Score).Underscore()).Value;
 
             var playerScore = new PlayerScoreDto(
                 playerId!,
@@ -100,10 +96,7 @@ public class RedisStreamWriteBehind : IWriteBehind
                 country ?? String.Empty
             );
 
-            await _eventStoreDbDatabaseProvider.AddOrUpdatePlayerScore(
-                playerScore,
-                cancellationToken
-            );
+            await _eventStoreDbDatabaseProvider.AddOrUpdatePlayerScore(playerScore, cancellationToken);
 
             // remove stream-key from redis after persist on primary database
             _redisDatabase.KeyExpire(streamKey, TimeSpan.FromSeconds(2));
@@ -120,10 +113,7 @@ public class RedisStreamWriteBehind : IWriteBehind
         return $"_{typeof(T).Name.Underscore()}-stream-*";
     }
 
-    private static IEnumerable<RedisKey> GetStreamKeysByPattern(
-        string pattern,
-        IConnectionMultiplexer redisConnection
-    )
+    private static IEnumerable<RedisKey> GetStreamKeysByPattern(string pattern, IConnectionMultiplexer redisConnection)
     {
         var server = redisConnection.GetServer(redisConnection.GetEndPoints().Single());
         var keys = server.Keys(pattern: pattern);

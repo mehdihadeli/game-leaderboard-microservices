@@ -7,14 +7,9 @@ namespace LeaderBoard.GameEventsSource.Players.CreatingPlayer;
 
 internal static class CreatePlayerEndpoint
 {
-    internal static RouteHandlerBuilder MapCreatePlayerEndpoint(
-        this IEndpointRouteBuilder routeBuilder
-    )
+    internal static RouteHandlerBuilder MapCreatePlayerEndpoint(this IEndpointRouteBuilder routeBuilder)
     {
-        return routeBuilder
-            .MapPost("/", Handle)
-            .WithTags(nameof(Player).Pluralize())
-            .WithName(nameof(CreatePlayer));
+        return routeBuilder.MapPost("/", Handle).WithTags(nameof(Player).Pluralize()).WithName(nameof(CreatePlayer));
 
         static async Task<Results<NoContent, BadRequest>> Handle(
             [AsParameters] CreatePlayerRequestParameters requestParameters
@@ -23,14 +18,7 @@ internal static class CreatePlayerEndpoint
             var (req, mediator, ct) = requestParameters;
 
             await mediator.Send(
-                new CreatePlayer(
-                    req.Email,
-                    req.UserName,
-                    req.Password,
-                    req.FirstName,
-                    req.LastName,
-                    req.Country
-                ),
+                new CreatePlayer(req.Email, req.UserName, req.Password, req.FirstName, req.LastName, req.Country),
                 ct
             );
 

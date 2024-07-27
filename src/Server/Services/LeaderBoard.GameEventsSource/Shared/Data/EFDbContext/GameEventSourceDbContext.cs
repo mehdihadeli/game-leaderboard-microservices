@@ -34,9 +34,7 @@ public class GameEventSourceDbContext : IdentityDbContext<Player, IdentityRole<G
             // Replace column names
             foreach (var property in entity.GetProperties())
             {
-                property.SetColumnName(
-                    property.GetColumnName(ecommerceObjectIdentifier)?.Underscore()
-                );
+                property.SetColumnName(property.GetColumnName(ecommerceObjectIdentifier)?.Underscore());
             }
 
             foreach (var key in entity.GetKeys())

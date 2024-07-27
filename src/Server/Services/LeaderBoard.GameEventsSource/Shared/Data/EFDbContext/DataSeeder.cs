@@ -12,10 +12,7 @@ public class DataSeeder : ISeeder
     private readonly UserManager<Player> _userManager;
     private readonly GameEventSourceDbContext _gameEventSourceDbContext;
 
-    public DataSeeder(
-        UserManager<Player> userManager,
-        GameEventSourceDbContext gameEventSourceDbContext
-    )
+    public DataSeeder(UserManager<Player> userManager, GameEventSourceDbContext gameEventSourceDbContext)
     {
         _userManager = userManager;
         _gameEventSourceDbContext = gameEventSourceDbContext;

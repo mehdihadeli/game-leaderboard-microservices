@@ -73,25 +73,15 @@ public class PlayerScoreService : IPlayerScoreService
             if (playerScore != null)
             {
                 await PopulateCache(playerScore);
-                return new PlayerScoreDetailDto(
-                    playerScore.Country,
-                    playerScore.FirstName,
-                    playerScore.LastName
-                );
+                return new PlayerScoreDetailDto(playerScore.Country, playerScore.FirstName, playerScore.LastName);
             }
 
             return null;
         }
 
-        var firstName = item.SingleOrDefault(
-            x => x.Name == nameof(PlayerScoreReadModel.FirstName).Underscore()
-        );
-        var lastName = item.SingleOrDefault(
-            x => x.Name == nameof(PlayerScoreReadModel.LastName).Underscore()
-        );
-        var country = item.SingleOrDefault(
-            x => x.Name == nameof(PlayerScoreReadModel.Country).Underscore()
-        );
+        var firstName = item.SingleOrDefault(x => x.Name == nameof(PlayerScoreReadModel.FirstName).Underscore());
+        var lastName = item.SingleOrDefault(x => x.Name == nameof(PlayerScoreReadModel.LastName).Underscore());
+        var country = item.SingleOrDefault(x => x.Name == nameof(PlayerScoreReadModel.Country).Underscore());
 
         return new PlayerScoreDetailDto(country.Value, firstName.Value, lastName.Value);
     }
@@ -146,11 +136,7 @@ public class PlayerScoreService : IPlayerScoreService
         }
     }
 
-    public async Task<PlayerScoreDto?> GetNextMemberByRank(
-        string leaderBoardName,
-        long rank,
-        bool isDesc = true
-    )
+    public async Task<PlayerScoreDto?> GetNextMemberByRank(string leaderBoardName, long rank, bool isDesc = true)
     {
         var counter = isDesc ? 1 : -1;
         var lastRank = _redisDatabase.SortedSetLength(leaderBoardName) - 1;
@@ -193,11 +179,7 @@ public class PlayerScoreService : IPlayerScoreService
         return playerScore;
     }
 
-    public async Task<PlayerScoreDto?> GetNextMember(
-        string leaderBoardName,
-        string memberKey,
-        bool isDesc = true
-    )
+    public async Task<PlayerScoreDto?> GetNextMember(string leaderBoardName, string memberKey, bool isDesc = true)
     {
         var counter = isDesc ? 1 : -1;
         var lastRank = _redisDatabase.SortedSetLength(leaderBoardName) - 1;
@@ -248,11 +230,7 @@ public class PlayerScoreService : IPlayerScoreService
         return playerScore;
     }
 
-    public async Task<PlayerScoreDto?> GetPreviousMember(
-        string leaderBoardName,
-        string memberKey,
-        bool isDesc = true
-    )
+    public async Task<PlayerScoreDto?> GetPreviousMember(string leaderBoardName, string memberKey, bool isDesc = true)
     {
         var counter = isDesc ? 1 : -1;
 
@@ -303,11 +281,7 @@ public class PlayerScoreService : IPlayerScoreService
         return playerScore;
     }
 
-    public async Task<PlayerScoreDto?> GetPreviousMemberByRank(
-        string leaderBoardName,
-        long rank,
-        bool isDesc = true
-    )
+    public async Task<PlayerScoreDto?> GetPreviousMemberByRank(string leaderBoardName, long rank, bool isDesc = true)
     {
         var counter = isDesc ? 1 : -1;
 

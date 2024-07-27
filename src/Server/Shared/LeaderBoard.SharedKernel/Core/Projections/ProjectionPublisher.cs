@@ -18,36 +18,26 @@ public class ProjectionPublisher : IProjectionPublisher
     private readonly IActivityScope _activityScope;
     private readonly AsyncPolicy _policy;
 
-    public ProjectionPublisher(
-        IServiceProvider serviceProvider,
-        IActivityScope activityScope,
-        AsyncPolicy policy
-    )
+    public ProjectionPublisher(IServiceProvider serviceProvider, IActivityScope activityScope, AsyncPolicy policy)
     {
         _serviceProvider = serviceProvider;
         _activityScope = activityScope;
         _policy = policy;
     }
 
-    public Task PublishAsync(
-        IStreamEvent eventEnvelope,
-        CancellationToken cancellationToken = default
-    )
+    public Task PublishAsync(IStreamEvent eventEnvelope, CancellationToken cancellationToken = default)
     {
         // calling generic `Publish<T>` in `ProjectionPublisher` class
         var genericPublishMethod = PublishMethods.GetOrAdd(
             eventEnvelope.Data.GetType(),
             eventType =>
                 typeof(ProjectionPublisher)
-                    .GetMethods(
-                        BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public
-                    )
+                    .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
                     .Single(m => m.Name == nameof(Publish) && m.GetGenericArguments().Any())
                     .MakeGenericMethod(eventType)
         );
 
-        return (Task)
-            genericPublishMethod.Invoke(this, new object[] { eventEnvelope, cancellationToken })!;
+        return (Task)genericPublishMethod.Invoke(this, new object[] { eventEnvelope, cancellationToken })!;
     }
 
     private async Task Publish<TEvent>(StreamEvent<TEvent> streamEvent, CancellationToken ct)
@@ -57,10 +47,7 @@ public class ProjectionPublisher : IProjectionPublisher
 
         var eventName = streamEvent.Data.GetType().Name;
 
-        var activityOptions = new StartActivityOptions
-        {
-            Tags = { { TelemetryTags.EventHandling.Event, eventName } }
-        };
+        var activityOptions = new StartActivityOptions { Tags = { { TelemetryTags.EventHandling.Event, eventName } } };
 
         var projections = scope.ServiceProvider.GetServices<IReadProjection>();
 
@@ -71,8 +58,7 @@ public class ProjectionPublisher : IProjectionPublisher
             await _activityScope
                 .Run(
                     activityName,
-                    (_, token) =>
-                        _policy.ExecuteAsync(c => projection.ProjectAsync(streamEvent, c), token),
+                    (_, token) => _policy.ExecuteAsync(c => projection.ProjectAsync(streamEvent, c), token),
                     activityOptions,
                     ct
                 )
@@ -87,8 +73,7 @@ public class ProjectionPublisher : IProjectionPublisher
             await _activityScope
                 .Run(
                     activityName,
-                    (_, token) =>
-                        _policy.ExecuteAsync(c => genericReadProjection.ProjectAsync(streamEvent, c), token),
+                    (_, token) => _policy.ExecuteAsync(c => genericReadProjection.ProjectAsync(streamEvent, c), token),
                     activityOptions,
                     ct
                 )

@@ -15,7 +15,8 @@ public static class ValueTypeConverter
         return tc.ConvertFrom(value);
     }
 
-    public static void RegisterTypeConverter<T, TC>() where TC : TypeConverter
+    public static void RegisterTypeConverter<T, TC>()
+        where TC : TypeConverter
     {
         TypeDescriptor.AddAttributes(typeof(T), new TypeConverterAttribute(typeof(TC)));
     }

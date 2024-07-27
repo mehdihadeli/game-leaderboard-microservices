@@ -55,12 +55,12 @@ public class DataSeeder : ISeeder
             // loading all data from EF postgres database to cache
             // for working ranks correctly we should load all items form primary database to cache for using sortedset for calculating ranks
             IQueryable<PlayerScoreReadModel> postgresItems = isDesc
-                ? _leaderBoardReadDbContext.PlayerScores
-                    .AsNoTracking()
+                ? _leaderBoardReadDbContext
+                    .PlayerScores.AsNoTracking()
                     .Where(x => x.LeaderBoardName == Constants.GlobalLeaderBoard)
                     .OrderByDescending(x => x.Score)
-                : _leaderBoardReadDbContext.PlayerScores
-                    .AsNoTracking()
+                : _leaderBoardReadDbContext
+                    .PlayerScores.AsNoTracking()
                     .Where(x => x.LeaderBoardName == Constants.GlobalLeaderBoard)
                     .OrderBy(x => x.Score);
 
