@@ -8,8 +8,8 @@ public static class Versioning
 {
     public static WebApplicationBuilder AddCustomVersioning(this WebApplicationBuilder builder)
     {
-        builder.Services
-            .AddApiVersioning(options =>
+        builder
+            .Services.AddApiVersioning(options =>
             {
                 // reporting api versions will return the headers
                 // "api-supported-versions" and "api-deprecated-versions"
@@ -32,8 +32,8 @@ public static class Versioning
                 // the default value of `DefaultApiVersion` is  `ApiVersion(1, new int?(0)`
                 options.DefaultApiVersion = new ApiVersion(1, 0);
 
-                options.Policies
-                    .Sunset(0.9)
+                options
+                    .Policies.Sunset(0.9)
                     .Effective(DateTimeOffset.Now.AddDays(60))
                     .Link("policy.html")
                     .Title("Versioning Policy")

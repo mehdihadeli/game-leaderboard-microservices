@@ -33,10 +33,7 @@ public class WriteThrough : IWriteThrough
 
         bool exists = true;
 
-        var currentScoreTask = _redisDatabase.SortedSetScoreAsync(
-            playerScoreDto.LeaderBoardName,
-            key
-        );
+        var currentScoreTask = _redisDatabase.SortedSetScoreAsync(playerScoreDto.LeaderBoardName, key);
 
         var currentScore = await currentScoreTask;
         if (currentScore == null)

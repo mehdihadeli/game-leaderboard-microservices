@@ -32,10 +32,7 @@ public class RedisPubSubWriteBehind : IWriteBehind
         await _redisDatabase.SubscribeMessage<PlayerScoreAddOrUpdated>(
             async (chanName, message) =>
             {
-                _logger.LogInformation(
-                    "{PlayerScoreAddOrUpdated} message received from redis pub/sub",
-                    message
-                );
+                _logger.LogInformation("{PlayerScoreAddOrUpdated} message received from redis pub/sub", message);
 
                 if (!_options.UseRedisPubSubWriteBehind)
                 {

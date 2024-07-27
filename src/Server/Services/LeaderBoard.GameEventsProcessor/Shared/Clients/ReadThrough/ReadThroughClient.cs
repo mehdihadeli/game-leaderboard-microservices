@@ -52,9 +52,9 @@ public class ReadThroughClient : IReadThroughClient
         // throw HttpResponseException instead of HttpRequestException (because we want detail response exception) with corresponding status code
         await httpResponse.EnsureSuccessStatusCodeWithDetailAsync();
 
-        var playerScoreClientDtos = await httpResponse.Content.ReadFromJsonAsync<
-            List<PlayerScoreClientDto>
-        >(cancellationToken: cancellationToken);
+        var playerScoreClientDtos = await httpResponse.Content.ReadFromJsonAsync<List<PlayerScoreClientDto>>(
+            cancellationToken: cancellationToken
+        );
 
         var dtos = _mapper.Map<List<PlayerScoreDto>>(playerScoreClientDtos);
 
@@ -87,10 +87,9 @@ public class ReadThroughClient : IReadThroughClient
             // throw HttpResponseException instead of HttpRequestException (because we want detail response exception) with corresponding status code
             await httpResponse.EnsureSuccessStatusCodeWithDetailAsync();
 
-            var playerScoreDto =
-                await httpResponse.Content.ReadFromJsonAsync<PlayerScoreWithNeighborsClientDto>(
-                    cancellationToken: cancellationToken
-                );
+            var playerScoreDto = await httpResponse.Content.ReadFromJsonAsync<PlayerScoreWithNeighborsClientDto>(
+                cancellationToken: cancellationToken
+            );
 
             var dto = _mapper.Map<PlayerScoreWithNeighborsDto>(playerScoreDto);
 

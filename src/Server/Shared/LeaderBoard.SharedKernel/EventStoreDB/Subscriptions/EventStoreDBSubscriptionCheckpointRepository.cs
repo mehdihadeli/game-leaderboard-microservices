@@ -13,8 +13,7 @@ public class EventStoreDBSubscriptionCheckpointRepository : ISubscriptionCheckpo
 
     public EventStoreDBSubscriptionCheckpointRepository(EventStoreClient eventStoreClient)
     {
-        this._eventStoreClient =
-            eventStoreClient ?? throw new ArgumentNullException(nameof(eventStoreClient));
+        this._eventStoreClient = eventStoreClient ?? throw new ArgumentNullException(nameof(eventStoreClient));
     }
 
     public async ValueTask<ulong?> Load(string subscriptionId, CancellationToken ct)
@@ -49,12 +48,7 @@ public class EventStoreDBSubscriptionCheckpointRepository : ISubscriptionCheckpo
         {
             // store new checkpoint expecting stream to exist
             await _eventStoreClient
-                .AppendToStreamAsync(
-                    streamName,
-                    StreamState.StreamExists,
-                    eventToAppend,
-                    cancellationToken: ct
-                )
+                .AppendToStreamAsync(streamName, StreamState.StreamExists, eventToAppend, cancellationToken: ct)
                 .ConfigureAwait(false);
         }
         catch (WrongExpectedVersionException)
@@ -63,26 +57,15 @@ public class EventStoreDBSubscriptionCheckpointRepository : ISubscriptionCheckpo
             // Set the checkpoint stream to have at most 1 event
             // using stream metadata $maxCount property
             await _eventStoreClient
-                .SetStreamMetadataAsync(
-                    streamName,
-                    StreamState.NoStream,
-                    new StreamMetadata(1),
-                    cancellationToken: ct
-                )
+                .SetStreamMetadataAsync(streamName, StreamState.NoStream, new StreamMetadata(1), cancellationToken: ct)
                 .ConfigureAwait(false);
 
             // append event again expecting stream to not exist
             await _eventStoreClient
-                .AppendToStreamAsync(
-                    streamName,
-                    StreamState.NoStream,
-                    eventToAppend,
-                    cancellationToken: ct
-                )
+                .AppendToStreamAsync(streamName, StreamState.NoStream, eventToAppend, cancellationToken: ct)
                 .ConfigureAwait(false);
         }
     }
 
-    private static string GetCheckpointStreamName(string subscriptionId) =>
-        $"checkpoint_{subscriptionId}";
+    private static string GetCheckpointStreamName(string subscriptionId) => $"checkpoint_{subscriptionId}";
 }

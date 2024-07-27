@@ -7,9 +7,7 @@ namespace LeaderBoard.WriteThrough.PlayerScore.Features.AddingOrUpdatingPlayerSc
 
 internal static class AddOrUpdatePlayerScoreEndpoint
 {
-    internal static RouteHandlerBuilder MapAddOrUpdatePlayerScoreEndpoint(
-        this IEndpointRouteBuilder routeBuilder
-    )
+    internal static RouteHandlerBuilder MapAddOrUpdatePlayerScoreEndpoint(this IEndpointRouteBuilder routeBuilder)
     {
         return routeBuilder
             .MapPost("players/{playerId}", Handle)

@@ -6,10 +6,7 @@ public static class LogoutEndpoint
 {
     internal static RouteHandlerBuilder MapLogoutEndpoint(this IEndpointRouteBuilder endpoints)
     {
-        return endpoints
-            .MapPost("/logout", Handler)
-            .WithTags(nameof(Accounts))
-            .WithName("Logout");
+        return endpoints.MapPost("/logout", Handler).WithTags(nameof(Accounts)).WithName("Logout");
 
         async Task<IResult> Handler([AsParameters] LogoutRequestParameters requestParameters)
         {
@@ -18,8 +15,5 @@ public static class LogoutEndpoint
         }
     }
 
-    internal record LogoutRequestParameters(
-        HttpContext HttpContext,
-        CancellationToken CancellationToken
-    );
+    internal record LogoutRequestParameters(HttpContext HttpContext, CancellationToken CancellationToken);
 }

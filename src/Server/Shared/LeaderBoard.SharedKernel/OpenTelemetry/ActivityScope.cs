@@ -4,16 +4,12 @@ namespace LeaderBoard.SharedKernel.OpenTelemetry;
 
 public interface IActivityScope
 {
-    Activity? Start(string name) =>
-        Start(name, new StartActivityOptions());
+    Activity? Start(string name) => Start(name, new StartActivityOptions());
 
     Activity? Start(string name, StartActivityOptions options);
 
-    Task Run(
-        string name,
-        Func<Activity, CancellationToken, Task> run,
-        CancellationToken ct
-    ) => Run(name, run, new StartActivityOptions(), ct);
+    Task Run(string name, Func<Activity, CancellationToken, Task> run, CancellationToken ct) =>
+        Run(name, run, new StartActivityOptions(), ct);
 
     Task Run(
         string name,
@@ -36,7 +32,7 @@ public interface IActivityScope
     );
 }
 
-public class ActivityScope: IActivityScope
+public class ActivityScope : IActivityScope
 {
     public static readonly IActivityScope Instance = new ActivityScope();
 
@@ -44,22 +40,24 @@ public class ActivityScope: IActivityScope
 
     public Activity? Start(string name, StartActivityOptions options) =>
         options.Parent.HasValue
-            ? ActivitySourceProvider.Instance
-                .CreateActivity(
+            ? ActivitySourceProvider
+                .Instance.CreateActivity(
                     $"{GeneralPrefix}.{name}",
                     options.Kind,
                     parentContext: options.Parent.Value,
                     idFormat: ActivityIdFormat.W3C,
                     tags: options.Tags
-                )?.Start()
-            : ActivitySourceProvider.Instance
-                .CreateActivity(
+                )
+                ?.Start()
+            : ActivitySourceProvider
+                .Instance.CreateActivity(
                     $"{GeneralPrefix}.{name}",
                     options.Kind,
                     parentId: options.ParentId,
                     idFormat: ActivityIdFormat.W3C,
                     tags: options.Tags
-                )?.Start();
+                )
+                ?.Start();
 
     public async Task Run(
         string name,
@@ -76,8 +74,8 @@ public class ActivityScope: IActivityScope
 
             activity?.SetStatus(ActivityStatusCode.Ok);
         }
-        catch(Exception ex)
-         {
+        catch (Exception ex)
+        {
             activity?.SetStatus(ActivityStatusCode.Error);
             throw;
         }

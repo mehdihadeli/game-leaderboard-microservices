@@ -17,10 +17,10 @@ public class InMemoryEventStore : IEventStore
         string streamId,
         StreamReadPosition? fromVersion = null,
         int maxCount = int.MaxValue,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
-        var result = FindStream(streamId)
-            .GetEvents(fromVersion ?? StreamReadPosition.Start, maxCount);
+        var result = FindStream(streamId).GetEvents(fromVersion ?? StreamReadPosition.Start, maxCount);
 
         return Task.FromResult<IEnumerable<IStreamEvent>>(result.Select(x => x.ToStreamEvent()));
     }
@@ -40,12 +40,7 @@ public class InMemoryEventStore : IEventStore
         CancellationToken cancellationToken = default
     )
     {
-        return AppendEventsAsync(
-            streamId,
-            new[] { @event },
-            ExpectedStreamVersion.NoStream,
-            cancellationToken
-        );
+        return AppendEventsAsync(streamId, new[] { @event }, ExpectedStreamVersion.NoStream, cancellationToken);
     }
 
     public Task<AppendResult> AppendEventAsync(
@@ -90,9 +85,7 @@ public class InMemoryEventStore : IEventStore
         where TAggregate : class, IEventSourcedAggregate<TId>
     {
         // var streamEvents = (await GetStreamEventsAsync(streamId, fromVersion, int.MaxValue, cancellationToken)).Select(x => x.Data);
-        var streamEvents = FindStream(streamId)
-            .GetEvents(fromVersion, int.MaxValue)
-            .Select(x => x.DeserializeData());
+        var streamEvents = FindStream(streamId).GetEvents(fromVersion, int.MaxValue).Select(x => x.DeserializeData());
 
         var result = streamEvents.Aggregate(
             defaultAggregateState,

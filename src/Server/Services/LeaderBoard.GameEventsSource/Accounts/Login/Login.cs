@@ -54,11 +54,7 @@ internal class LoginHandler : IRequestHandler<Login, LoginResult>
             throw new NotFoundException("User not found");
 
         // instead of PasswordSignInAsync, we use CheckPasswordSignInAsync because we don't want set cookie, instead we use JWT
-        var signinResult = await _signInManager.CheckPasswordSignInAsync(
-            identityUser,
-            request.Password,
-            false
-        );
+        var signinResult = await _signInManager.CheckPasswordSignInAsync(identityUser, request.Password, false);
 
         if (signinResult.IsNotAllowed)
         {
@@ -83,10 +79,7 @@ internal class LoginHandler : IRequestHandler<Login, LoginResult>
         }
         else if (!signinResult.Succeeded)
         {
-            throw new CustomException(
-                "UserName or Password is invalid.",
-                statusCode: StatusCodes.Status400BadRequest
-            );
+            throw new CustomException("UserName or Password is invalid.", statusCode: StatusCodes.Status400BadRequest);
         }
 
         string token = await _tokenService.GetJwtTokenAsync(identityUser);

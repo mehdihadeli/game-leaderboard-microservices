@@ -1,32 +1,32 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 using System.Text;
+using FluentValidation;
 using Humanizer;
 using LeaderBoard.DbMigrator;
 using LeaderBoard.GameEventsSource;
+using LeaderBoard.GameEventsSource.Accounts.GettingProfile;
 using LeaderBoard.GameEventsSource.Accounts.Login;
+using LeaderBoard.GameEventsSource.Accounts.Logout;
 using LeaderBoard.GameEventsSource.GameEvent.Features;
+using LeaderBoard.GameEventsSource.GameEvent.Features.CreatingGameEvent;
+using LeaderBoard.GameEventsSource.Players.CreatingPlayer;
 using LeaderBoard.GameEventsSource.Players.Models;
 using LeaderBoard.GameEventsSource.Shared.Data.EFDbContext;
 using LeaderBoard.GameEventsSource.Shared.Extensions.WebApplicationBuilderExtensions;
+using LeaderBoard.GameEventsSource.Shared.Services;
 using LeaderBoard.SharedKernel.Application.Data.EFContext;
 using LeaderBoard.SharedKernel.Bus;
 using LeaderBoard.SharedKernel.Contracts.Data;
+using LeaderBoard.SharedKernel.Core.Extensions;
 using LeaderBoard.SharedKernel.Core.Extensions.ServiceCollectionExtensions;
+using LeaderBoard.SharedKernel.Jwt;
 using LeaderBoard.SharedKernel.Postgres;
 using MassTransit;
-using Microsoft.EntityFrameworkCore;
-using Serilog;
-using FluentValidation;
-using LeaderBoard.GameEventsSource.Accounts.GettingProfile;
-using LeaderBoard.GameEventsSource.Accounts.Logout;
-using LeaderBoard.GameEventsSource.GameEvent.Features.CreatingGameEvent;
-using LeaderBoard.GameEventsSource.Players.CreatingPlayer;
-using LeaderBoard.GameEventsSource.Shared.Services;
-using LeaderBoard.SharedKernel.Core.Extensions;
-using LeaderBoard.SharedKernel.Jwt;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
 using Serilog.Exceptions;
 using ValidationException = LeaderBoard.SharedKernel.Core.Exceptions.ValidationException;
 
@@ -58,8 +58,8 @@ builder.Host.UseSerilog(
     (context, services, configuration) =>
     {
         //https://github.com/serilog/serilog-aspnetcore#two-stage-initialization
-        configuration.ReadFrom
-            .Configuration(context.Configuration)
+        configuration
+            .ReadFrom.Configuration(context.Configuration)
             .ReadFrom.Services(services)
             .Enrich.FromLogContext()
             .Enrich.WithExceptionDetails()
@@ -91,8 +91,8 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
 var jwtOptions = builder.Configuration.BindOptions<JwtOptions>();
-builder.Services
-    .AddAuthentication(options =>
+builder
+    .Services.AddAuthentication(options =>
     {
         options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
         options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -117,12 +117,8 @@ builder.Services.AddAuthorizationBuilder();
 
 builder.Services.AddHttpContextAccessor();
 
-builder.AddPostgresDbContext<GameEventSourceDbContext>(
-    migrationAssembly: Assembly.GetExecutingAssembly()
-);
-builder.AddPostgresDbContext<InboxOutboxDbContext>(
-    migrationAssembly: typeof(MigrationRootMetadata).Assembly
-);
+builder.AddPostgresDbContext<GameEventSourceDbContext>(migrationAssembly: Assembly.GetExecutingAssembly());
+builder.AddPostgresDbContext<InboxOutboxDbContext>(migrationAssembly: typeof(MigrationRootMetadata).Assembly);
 builder.Services.AddTransient<ISeeder, DataSeeder>();
 
 builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());

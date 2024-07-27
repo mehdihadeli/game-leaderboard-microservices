@@ -12,11 +12,7 @@ public class WriteThroughClient : IWriteThroughClient
     private readonly IMapper _mapper;
     private readonly WriteThroughHttpClientOptions _options;
 
-    public WriteThroughClient(
-        HttpClient httpClient,
-        IMapper mapper,
-        IOptions<WriteThroughHttpClientOptions> options
-    )
+    public WriteThroughClient(HttpClient httpClient, IMapper mapper, IOptions<WriteThroughHttpClientOptions> options)
     {
         _httpClient = httpClient;
         _mapper = mapper;

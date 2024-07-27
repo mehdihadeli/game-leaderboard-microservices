@@ -1,5 +1,3 @@
 namespace LeaderBoard.DbMigrator;
 
-public class MigrationRootMetadata
-{
-}
+public class MigrationRootMetadata { }

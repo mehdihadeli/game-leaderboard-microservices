@@ -8,9 +8,7 @@ public class CustomUserIdProvider : IUserIdProvider
 {
     public string? GetUserId(HubConnectionContext connection)
     {
-        var userId = connection.User?.Claims
-            .SingleOrDefault(x => x.Type == JwtRegisteredClaimNames.NameId)
-            ?.Value;
+        var userId = connection.User?.Claims.SingleOrDefault(x => x.Type == JwtRegisteredClaimNames.NameId)?.Value;
 
         return userId;
     }

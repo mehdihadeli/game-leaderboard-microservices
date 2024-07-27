@@ -64,10 +64,7 @@ internal class EfProjectionBase<TDbContext, TEvent, TView> : IReadProjection<TEv
         _getId = getId;
     }
 
-    public async Task ProjectAsync(
-        IStreamEvent<TEvent> streamEvent,
-        CancellationToken cancellationToken = default
-    )
+    public async Task ProjectAsync(IStreamEvent<TEvent> streamEvent, CancellationToken cancellationToken = default)
     {
         var @event = streamEvent.Data;
         var eventMetadata = streamEvent.Metadata;

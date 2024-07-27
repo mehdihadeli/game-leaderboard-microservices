@@ -20,12 +20,12 @@ public class PostgresReadProviderDatabase : IReadProviderDatabase
     )
     {
         IQueryable<PlayerScoreReadModel> postgresItems = isDesc
-            ? _leaderBoardReadDbContext.PlayerScores
-                .AsNoTracking()
+            ? _leaderBoardReadDbContext
+                .PlayerScores.AsNoTracking()
                 .Where(x => x.LeaderBoardName == Constants.GlobalLeaderBoard)
                 .OrderByDescending(x => x.Score)
-            : _leaderBoardReadDbContext.PlayerScores
-                .AsNoTracking()
+            : _leaderBoardReadDbContext
+                .PlayerScores.AsNoTracking()
                 .Where(x => x.LeaderBoardName == Constants.GlobalLeaderBoard)
                 .OrderBy(x => x.Score);
 

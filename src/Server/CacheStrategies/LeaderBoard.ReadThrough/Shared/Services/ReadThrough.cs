@@ -16,10 +16,7 @@ public class ReadThrough : IReadThrough
     private readonly IReadProviderDatabase _postgresReadProviderDatabase;
     private readonly IDatabase _redisDatabase;
 
-    public ReadThrough(
-        IConnectionMultiplexer redisConnection,
-        IReadProviderDatabase postgresReadProviderDatabase
-    )
+    public ReadThrough(IConnectionMultiplexer redisConnection, IReadProviderDatabase postgresReadProviderDatabase)
     {
         _postgresReadProviderDatabase = postgresReadProviderDatabase;
         _redisDatabase = redisConnection.GetDatabase();
@@ -49,18 +46,11 @@ public class ReadThrough : IReadThrough
         if (results == null || results.Length == 0)
         {
             // 2. If data not exist in the cache, read data from primary database
-            var items = _postgresReadProviderDatabase.GetScoresAndRanks(
-                leaderBoardName,
-                isDesc,
-                cancellationToken
-            );
+            var items = _postgresReadProviderDatabase.GetScoresAndRanks(leaderBoardName, isDesc, cancellationToken);
 
             // 3. update cache with fetched results from primary database
             await PopulateCache(items);
-            var data = await items
-                .Skip(start)
-                .Take(end + 1)
-                .ToListAsync(cancellationToken: cancellationToken);
+            var data = await items.Skip(start).Take(end + 1).ToListAsync(cancellationToken: cancellationToken);
 
             if (data.Count == 0)
             {
@@ -88,12 +78,7 @@ public class ReadThrough : IReadThrough
             var playerId = key.Split(":")[1];
 
             // get detail information about saved sortedset score-player
-            var detail = await GetPlayerScoreDetail(
-                leaderBoardName,
-                key,
-                isDesc,
-                cancellationToken
-            );
+            var detail = await GetPlayerScoreDetail(leaderBoardName, key, isDesc, cancellationToken);
 
             var playerScore = new PlayerScoreDto(
                 playerId,
@@ -174,12 +159,7 @@ public class ReadThrough : IReadThrough
         }
         else
         {
-            PlayerScoreDetailDto? detail = await GetPlayerScoreDetail(
-                leaderBoardName,
-                key,
-                isDesc,
-                cancellationToken
-            );
+            PlayerScoreDetailDto? detail = await GetPlayerScoreDetail(leaderBoardName, key, isDesc, cancellationToken);
 
             var nextMember = await GetNextMember(leaderBoardName, key, isDesc);
             var previousMember = await GetPreviousMember(leaderBoardName, key, isDesc);
@@ -212,12 +192,7 @@ public class ReadThrough : IReadThrough
         var results = new List<PlayerScoreWithNeighborsDto>();
         foreach (var playerId in playerIds)
         {
-            var playerScore = await GetGlobalScoreAndRank(
-                leaderBoardName,
-                playerId,
-                isDesc,
-                cancellationToken
-            );
+            var playerScore = await GetGlobalScoreAndRank(leaderBoardName, playerId, isDesc, cancellationToken);
             if (playerScore != null)
             {
                 results.Add(playerScore);
@@ -304,34 +279,20 @@ public class ReadThrough : IReadThrough
             if (playerScore != null)
             {
                 await PopulateCache(playerScore);
-                return new PlayerScoreDetailDto(
-                    playerScore.Country,
-                    playerScore.FirstName,
-                    playerScore.LastName
-                );
+                return new PlayerScoreDetailDto(playerScore.Country, playerScore.FirstName, playerScore.LastName);
             }
 
             return null;
         }
 
-        var firstName = item.SingleOrDefault(
-            x => x.Name == nameof(PlayerScoreReadModel.FirstName).Underscore()
-        );
-        var lastName = item.SingleOrDefault(
-            x => x.Name == nameof(PlayerScoreReadModel.LastName).Underscore()
-        );
-        var country = item.SingleOrDefault(
-            x => x.Name == nameof(PlayerScoreReadModel.Country).Underscore()
-        );
+        var firstName = item.SingleOrDefault(x => x.Name == nameof(PlayerScoreReadModel.FirstName).Underscore());
+        var lastName = item.SingleOrDefault(x => x.Name == nameof(PlayerScoreReadModel.LastName).Underscore());
+        var country = item.SingleOrDefault(x => x.Name == nameof(PlayerScoreReadModel.Country).Underscore());
 
         return new PlayerScoreDetailDto(country.Value, firstName.Value, lastName.Value);
     }
 
-    public async Task<PlayerScoreDto?> GetNextMemberByRank(
-        string leaderBoardName,
-        long rank,
-        bool isDesc = true
-    )
+    public async Task<PlayerScoreDto?> GetNextMemberByRank(string leaderBoardName, long rank, bool isDesc = true)
     {
         var counter = isDesc ? 1 : -1;
         var lastRank = _redisDatabase.SortedSetLength(leaderBoardName) - 1;
@@ -374,11 +335,7 @@ public class ReadThrough : IReadThrough
         return playerScore;
     }
 
-    public async Task<PlayerScoreDto?> GetNextMember(
-        string leaderBoardName,
-        string memberKey,
-        bool isDesc = true
-    )
+    public async Task<PlayerScoreDto?> GetNextMember(string leaderBoardName, string memberKey, bool isDesc = true)
     {
         var counter = isDesc ? 1 : -1;
         var lastRank = _redisDatabase.SortedSetLength(leaderBoardName) - 1;
@@ -429,11 +386,7 @@ public class ReadThrough : IReadThrough
         return playerScore;
     }
 
-    public async Task<PlayerScoreDto?> GetPreviousMember(
-        string leaderBoardName,
-        string memberKey,
-        bool isDesc = true
-    )
+    public async Task<PlayerScoreDto?> GetPreviousMember(string leaderBoardName, string memberKey, bool isDesc = true)
     {
         var counter = isDesc ? 1 : -1;
 
@@ -484,11 +437,7 @@ public class ReadThrough : IReadThrough
         return playerScore;
     }
 
-    public async Task<PlayerScoreDto?> GetPreviousMemberByRank(
-        string leaderBoardName,
-        long rank,
-        bool isDesc = true
-    )
+    public async Task<PlayerScoreDto?> GetPreviousMemberByRank(string leaderBoardName, long rank, bool isDesc = true)
     {
         var counter = isDesc ? 1 : -1;
 

@@ -21,10 +21,7 @@ public class BusPublisher : IBusPublisher
         await _inboxOutboxDbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task PublishBatch<T>(
-        IEnumerable<T> messages,
-        CancellationToken cancellationToken = default
-    )
+    public async Task PublishBatch<T>(IEnumerable<T> messages, CancellationToken cancellationToken = default)
         where T : class
     {
         await _publishEndpoint.PublishBatch(messages, cancellationToken);

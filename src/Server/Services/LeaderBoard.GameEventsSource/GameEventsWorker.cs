@@ -29,8 +29,7 @@ public class GameEventsWorker : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
-        var gameEventSourceDbContext =
-            scope.ServiceProvider.GetRequiredService<GameEventSourceDbContext>();
+        var gameEventSourceDbContext = scope.ServiceProvider.GetRequiredService<GameEventSourceDbContext>();
         var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Player>>();
 

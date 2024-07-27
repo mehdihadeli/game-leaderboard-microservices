@@ -15,9 +15,7 @@ public class WriteBehindWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var writeBehindStrategies = _serviceScope.ServiceProvider.GetRequiredService<
-            IEnumerable<IWriteBehind>
-        >();
+        var writeBehindStrategies = _serviceScope.ServiceProvider.GetRequiredService<IEnumerable<IWriteBehind>>();
         List<Task> tasks = new List<Task>();
         foreach (var writeBehindStrategy in writeBehindStrategies)
         {

@@ -7,9 +7,7 @@ namespace LeaderBoard.GameEventsSource.GameEvent.Features.CreatingGameEvent;
 
 internal static class CreateGameEventEndpoint
 {
-    internal static RouteHandlerBuilder MapCreateGameEventEndpoint(
-        this IEndpointRouteBuilder routeBuilder
-    )
+    internal static RouteHandlerBuilder MapCreateGameEventEndpoint(this IEndpointRouteBuilder routeBuilder)
     {
         return routeBuilder
             .MapPost("players/{playerId:guid}", Handle)
@@ -22,10 +20,7 @@ internal static class CreateGameEventEndpoint
         {
             var (playerId, req, mediator, ct) = requestParameters;
 
-            await mediator.Send(
-                new CreateGameEvent(playerId, req.Score, req.FirstName, req.LastName, req.Country),
-                ct
-            );
+            await mediator.Send(new CreateGameEvent(playerId, req.Score, req.FirstName, req.LastName, req.Country), ct);
 
             return TypedResults.NoContent();
         }
@@ -38,10 +33,5 @@ internal static class CreateGameEventEndpoint
         CancellationToken CancellationToken
     );
 
-    internal record CreateGameEventRequest(
-        double Score,
-        string FirstName,
-        string LastName,
-        string Country
-    );
+    internal record CreateGameEventRequest(double Score, string FirstName, string LastName, string Country);
 }

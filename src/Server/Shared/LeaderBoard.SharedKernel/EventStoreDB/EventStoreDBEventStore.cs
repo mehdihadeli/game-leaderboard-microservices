@@ -17,10 +17,7 @@ public class EventStoreDBEventStore : IEventStore
         _grpcClient = grpcClient;
     }
 
-    public async Task<bool> StreamExists(
-        string streamId,
-        CancellationToken cancellationToken = default
-    )
+    public async Task<bool> StreamExists(string streamId, CancellationToken cancellationToken = default)
     {
         var read = _grpcClient.ReadStreamAsync(
             Direction.Forwards,
@@ -38,7 +35,8 @@ public class EventStoreDBEventStore : IEventStore
         string streamId,
         StreamReadPosition? fromVersion = null,
         int maxCount = int.MaxValue,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var readResult = _grpcClient.ReadStreamAsync(
             Direction.Forwards,

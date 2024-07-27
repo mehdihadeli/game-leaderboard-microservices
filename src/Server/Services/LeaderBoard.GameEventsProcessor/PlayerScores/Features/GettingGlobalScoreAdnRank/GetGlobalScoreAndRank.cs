@@ -17,8 +17,7 @@ namespace LeaderBoard.GameEventsProcessor.PlayerScores.Features.GettingGlobalSco
 public record GetGlobalScoreAndRank(Guid PlayerId, string LeaderBoardName, bool IsDesc = true)
     : IRequest<PlayerScoreWithNeighborsDto?>;
 
-internal class GetGlobalScoreAndRankHandler
-    : IRequestHandler<GetGlobalScoreAndRank, PlayerScoreWithNeighborsDto?>
+internal class GetGlobalScoreAndRankHandler : IRequestHandler<GetGlobalScoreAndRank, PlayerScoreWithNeighborsDto?>
 {
     private readonly LeaderBoardReadDbContext _leaderBoardReadDbContext;
     private readonly IReadThroughClient _readThroughClient;
@@ -74,9 +73,7 @@ internal class GetGlobalScoreAndRankHandler
             // https://developers.eventstore.com/server/v22.10/projections.html#streams-projection
             // First read from EF postgres database as backup database and then if not exists read from primary database EventStoreDB (but we have some limitations reading all streams and filtering!)
             var playerScore = await _leaderBoardReadDbContext.PlayerScores.SingleOrDefaultAsync(
-                x =>
-                    x.PlayerId == playerIdString
-                    && x.LeaderBoardName == Constants.GlobalLeaderBoard,
+                x => x.PlayerId == playerIdString && x.LeaderBoardName == Constants.GlobalLeaderBoard,
                 cancellationToken: cancellationToken
             );
             if (playerScore != null)
@@ -91,11 +88,7 @@ internal class GetGlobalScoreAndRankHandler
                 );
                 rank = request.IsDesc ? rank + 1 : rank - 1;
 
-                var nextMember = await _playerScoreService.GetNextMember(
-                    request.LeaderBoardName,
-                    key,
-                    request.IsDesc
-                );
+                var nextMember = await _playerScoreService.GetNextMember(request.LeaderBoardName, key, request.IsDesc);
                 var previousMember = await _playerScoreService.GetPreviousMember(
                     request.LeaderBoardName,
                     key,
@@ -127,11 +120,7 @@ internal class GetGlobalScoreAndRankHandler
                 request.IsDesc,
                 cancellationToken
             );
-            var nextMember = await _playerScoreService.GetNextMember(
-                request.LeaderBoardName,
-                key,
-                request.IsDesc
-            );
+            var nextMember = await _playerScoreService.GetNextMember(request.LeaderBoardName, key, request.IsDesc);
             var previousMember = await _playerScoreService.GetPreviousMember(
                 request.LeaderBoardName,
                 key,

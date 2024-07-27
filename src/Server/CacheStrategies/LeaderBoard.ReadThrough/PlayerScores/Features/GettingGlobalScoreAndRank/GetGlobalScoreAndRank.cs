@@ -12,8 +12,7 @@ internal record GetGlobalScoreAndRank(
     bool IsDesc = true
 ) : IRequest<PlayerScoreWithNeighborsDto?>;
 
-internal class GetGlobalScoreAndRankHandler
-    : IRequestHandler<GetGlobalScoreAndRank, PlayerScoreWithNeighborsDto?>
+internal class GetGlobalScoreAndRankHandler : IRequestHandler<GetGlobalScoreAndRank, PlayerScoreWithNeighborsDto?>
 {
     private readonly IReadThrough _readThrough;
 

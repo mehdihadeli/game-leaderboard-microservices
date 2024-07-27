@@ -11,8 +11,8 @@ public static partial class WebApplicationBuilderExtensions
     {
         builder.Services.AddValidatedOptions<IdentityOptions>();
 
-        builder.Services
-            .AddIdentity<Player, IdentityRole<Guid>>(options =>
+        builder
+            .Services.AddIdentity<Player, IdentityRole<Guid>>(options =>
             {
                 // Password settings.
                 options.Password.RequireDigit = false;

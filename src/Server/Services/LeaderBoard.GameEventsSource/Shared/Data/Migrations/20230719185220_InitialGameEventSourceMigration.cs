@@ -18,13 +18,18 @@ namespace LeaderBoard.GameEventsSource.Shared.Data.Migrations
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     name = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
-                    normalized_name = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    normalized_name = table.Column<string>(
+                        type: "character varying(256)",
+                        maxLength: 256,
+                        nullable: true
+                    ),
                     concurrency_stamp = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_asp_net_roles", x => x.id);
-                });
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "asp_net_users",
@@ -35,9 +40,17 @@ namespace LeaderBoard.GameEventsSource.Shared.Data.Migrations
                     last_name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     country = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     user_name = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
-                    normalized_user_name = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    normalized_user_name = table.Column<string>(
+                        type: "character varying(256)",
+                        maxLength: 256,
+                        nullable: true
+                    ),
                     email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
-                    normalized_email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    normalized_email = table.Column<string>(
+                        type: "character varying(256)",
+                        maxLength: 256,
+                        nullable: true
+                    ),
                     email_confirmed = table.Column<bool>(type: "boolean", nullable: false),
                     password_hash = table.Column<string>(type: "text", nullable: true),
                     security_stamp = table.Column<string>(type: "text", nullable: true),
@@ -52,14 +65,19 @@ namespace LeaderBoard.GameEventsSource.Shared.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_asp_net_users", x => x.id);
-                });
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "asp_net_role_claims",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    id = table
+                        .Column<int>(type: "integer", nullable: false)
+                        .Annotation(
+                            "Npgsql:ValueGenerationStrategy",
+                            NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
+                        ),
                     role_id = table.Column<Guid>(type: "uuid", nullable: false),
                     claim_type = table.Column<string>(type: "text", nullable: true),
                     claim_value = table.Column<string>(type: "text", nullable: true)
@@ -72,15 +90,21 @@ namespace LeaderBoard.GameEventsSource.Shared.Data.Migrations
                         column: x => x.role_id,
                         principalTable: "asp_net_roles",
                         principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+                        onDelete: ReferentialAction.Cascade
+                    );
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "asp_net_user_claims",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    id = table
+                        .Column<int>(type: "integer", nullable: false)
+                        .Annotation(
+                            "Npgsql:ValueGenerationStrategy",
+                            NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
+                        ),
                     user_id = table.Column<Guid>(type: "uuid", nullable: false),
                     claim_type = table.Column<string>(type: "text", nullable: true),
                     claim_value = table.Column<string>(type: "text", nullable: true)
@@ -93,8 +117,10 @@ namespace LeaderBoard.GameEventsSource.Shared.Data.Migrations
                         column: x => x.user_id,
                         principalTable: "asp_net_users",
                         principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+                        onDelete: ReferentialAction.Cascade
+                    );
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "asp_net_user_logins",
@@ -113,8 +139,10 @@ namespace LeaderBoard.GameEventsSource.Shared.Data.Migrations
                         column: x => x.user_id,
                         principalTable: "asp_net_users",
                         principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+                        onDelete: ReferentialAction.Cascade
+                    );
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "asp_net_user_roles",
@@ -131,14 +159,17 @@ namespace LeaderBoard.GameEventsSource.Shared.Data.Migrations
                         column: x => x.role_id,
                         principalTable: "asp_net_roles",
                         principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Cascade
+                    );
                     table.ForeignKey(
                         name: "fk_asp_net_user_roles_asp_net_users_user_id",
                         column: x => x.user_id,
                         principalTable: "asp_net_users",
                         principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+                        onDelete: ReferentialAction.Cascade
+                    );
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "asp_net_user_tokens",
@@ -151,76 +182,82 @@ namespace LeaderBoard.GameEventsSource.Shared.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_asp_net_user_tokens", x => new { x.user_id, x.login_provider, x.name });
+                    table.PrimaryKey(
+                        "pk_asp_net_user_tokens",
+                        x => new
+                        {
+                            x.user_id,
+                            x.login_provider,
+                            x.name
+                        }
+                    );
                     table.ForeignKey(
                         name: "fk_asp_net_user_tokens_asp_net_users_user_id",
                         column: x => x.user_id,
                         principalTable: "asp_net_users",
                         principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+                        onDelete: ReferentialAction.Cascade
+                    );
+                }
+            );
 
             migrationBuilder.CreateIndex(
                 name: "ix_asp_net_role_claims_role_id",
                 table: "asp_net_role_claims",
-                column: "role_id");
+                column: "role_id"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "RoleNameIndex",
                 table: "asp_net_roles",
                 column: "normalized_name",
-                unique: true);
+                unique: true
+            );
 
             migrationBuilder.CreateIndex(
                 name: "ix_asp_net_user_claims_user_id",
                 table: "asp_net_user_claims",
-                column: "user_id");
+                column: "user_id"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "ix_asp_net_user_logins_user_id",
                 table: "asp_net_user_logins",
-                column: "user_id");
+                column: "user_id"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "ix_asp_net_user_roles_role_id",
                 table: "asp_net_user_roles",
-                column: "role_id");
+                column: "role_id"
+            );
 
-            migrationBuilder.CreateIndex(
-                name: "EmailIndex",
-                table: "asp_net_users",
-                column: "normalized_email");
+            migrationBuilder.CreateIndex(name: "EmailIndex", table: "asp_net_users", column: "normalized_email");
 
             migrationBuilder.CreateIndex(
                 name: "UserNameIndex",
                 table: "asp_net_users",
                 column: "normalized_user_name",
-                unique: true);
+                unique: true
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "asp_net_role_claims");
+            migrationBuilder.DropTable(name: "asp_net_role_claims");
 
-            migrationBuilder.DropTable(
-                name: "asp_net_user_claims");
+            migrationBuilder.DropTable(name: "asp_net_user_claims");
 
-            migrationBuilder.DropTable(
-                name: "asp_net_user_logins");
+            migrationBuilder.DropTable(name: "asp_net_user_logins");
 
-            migrationBuilder.DropTable(
-                name: "asp_net_user_roles");
+            migrationBuilder.DropTable(name: "asp_net_user_roles");
 
-            migrationBuilder.DropTable(
-                name: "asp_net_user_tokens");
+            migrationBuilder.DropTable(name: "asp_net_user_tokens");
 
-            migrationBuilder.DropTable(
-                name: "asp_net_roles");
+            migrationBuilder.DropTable(name: "asp_net_roles");
 
-            migrationBuilder.DropTable(
-                name: "asp_net_users");
+            migrationBuilder.DropTable(name: "asp_net_users");
         }
     }
 }

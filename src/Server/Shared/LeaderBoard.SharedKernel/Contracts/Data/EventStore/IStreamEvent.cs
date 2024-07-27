@@ -9,7 +9,7 @@ public interface IStreamEvent
 }
 
 public interface IStreamEvent<out T> : IStreamEvent
-where T : IDomainEvent
+    where T : IDomainEvent
 {
     new T Data { get; }
 }

@@ -4,8 +4,5 @@ namespace LeaderBoard.GameEventsProcessor.Shared.Clients.WriteThrough;
 
 public interface IWriteThroughClient
 {
-    Task AddOrUpdatePlayerScore(
-        PlayerScoreDto playerScoreDto,
-        CancellationToken cancellationToken = default
-    );
+    Task AddOrUpdatePlayerScore(PlayerScoreDto playerScoreDto, CancellationToken cancellationToken = default);
 }

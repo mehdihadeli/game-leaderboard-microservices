@@ -22,10 +22,8 @@ public static partial class WebApplicationBuilderExtensions
                 // `problemDetailContext` doesn't contain real `exception` it will add in this pull request in .net 8
                 // .net 8 will add `IExceptionHandlerFeature`in `DisplayExceptionContent` and `SetExceptionHandlerFeatures` methods `DeveloperExceptionPageMiddlewareImpl` class, exact functionality of CaptureException
                 // bet before .net 8 preview 5 we should add `IExceptionHandlerFeature` manually with our `UseCaptureException`
-                if (
-                    problemDetailContext.HttpContext.Features.Get<IExceptionHandlerFeature>() is
-                    { } exceptionFeature
-                ) { }
+                if (problemDetailContext.HttpContext.Features.Get<IExceptionHandlerFeature>() is { } exceptionFeature)
+                { }
             };
         });
 

@@ -16,10 +16,7 @@ internal class GetProfileHandler : IRequestHandler<GetProfile, GetProfileResult?
         _userManager = userManager;
     }
 
-    public async Task<GetProfileResult?> Handle(
-        GetProfile request,
-        CancellationToken cancellationToken
-    )
+    public async Task<GetProfileResult?> Handle(GetProfile request, CancellationToken cancellationToken)
     {
         request.NotBeNull();
         request.UserId.NotBeEmptyOrNull();
@@ -41,11 +38,4 @@ internal class GetProfileHandler : IRequestHandler<GetProfile, GetProfileResult?
     }
 }
 
-record GetProfileResult(
-    string Id,
-    string FirstName,
-    string LastName,
-    string Country,
-    string? Email,
-    string? UserName
-);
+record GetProfileResult(string Id, string FirstName, string LastName, string Country, string? Email, string? UserName);

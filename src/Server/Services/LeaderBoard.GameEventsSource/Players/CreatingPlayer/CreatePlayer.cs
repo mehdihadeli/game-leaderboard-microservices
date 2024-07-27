@@ -45,9 +45,7 @@ internal class CreatePlayerHandler : IRequestHandler<CreatePlayer>
 
         if (identityResult.Succeeded == false)
         {
-            throw new ValidationException(
-                string.Join(',', identityResult.Errors.Select(x => x.Description))
-            );
+            throw new ValidationException(string.Join(',', identityResult.Errors.Select(x => x.Description)));
         }
     }
 }

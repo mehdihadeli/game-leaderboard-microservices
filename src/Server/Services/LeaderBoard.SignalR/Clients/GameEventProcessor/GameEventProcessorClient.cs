@@ -33,11 +33,7 @@ public class GameEventProcessorClient : IGameEventProcessorClient
     )
     {
         // https://stackoverflow.com/a/67877742/581476
-        var qb = new QueryBuilder
-        {
-            { nameof(leaderBoardName), leaderBoardName },
-            { nameof(playerIds), playerIds },
-        };
+        var qb = new QueryBuilder { { nameof(leaderBoardName), leaderBoardName }, { nameof(playerIds), playerIds }, };
 
         // https://github.com/App-vNext/Polly#handing-return-values-and-policytresult
         var httpResponse = await _httpClient.GetAsync(
@@ -79,10 +75,9 @@ public class GameEventProcessorClient : IGameEventProcessorClient
             // throw HttpResponseException instead of HttpRequestException (because we want detail response exception) with corresponding status code
             await httpResponse.EnsureSuccessStatusCodeWithDetailAsync();
 
-            var playerScoreClientDto =
-                await httpResponse.Content.ReadFromJsonAsync<PlayerScoreWithNeighborsClientDto>(
-                    cancellationToken: cancellationToken
-                );
+            var playerScoreClientDto = await httpResponse.Content.ReadFromJsonAsync<PlayerScoreWithNeighborsClientDto>(
+                cancellationToken: cancellationToken
+            );
 
             var dto = _mapper.Map<PlayerScoreWithNeighborsDto>(playerScoreClientDto);
 

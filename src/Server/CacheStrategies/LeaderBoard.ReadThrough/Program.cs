@@ -19,8 +19,8 @@ using Serilog.Events;
 using Serilog.Exceptions;
 
 // https://github.com/serilog/serilog-aspnetcore#two-stage-initialization
-Log.Logger = new LoggerConfiguration().MinimumLevel
-    .Override("Microsoft", LogEventLevel.Information)
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
     .Enrich.FromLogContext()
     .Enrich.WithExceptionDetails()
     .WriteTo.Console()
@@ -56,8 +56,8 @@ try
         (context, services, configuration) =>
         {
             //https://github.com/serilog/serilog-aspnetcore#two-stage-initialization
-            configuration.ReadFrom
-                .Configuration(context.Configuration)
+            configuration
+                .ReadFrom.Configuration(context.Configuration)
                 .ReadFrom.Services(services)
                 .Enrich.FromLogContext()
                 .WriteTo.Console();
@@ -74,24 +74,18 @@ try
     builder.Services.AddSwaggerGen();
 
     builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
-    builder.Services.AddMediatR(
-        c => c.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly())
-    );
+    builder.Services.AddMediatR(c => c.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 
     builder.AddCustomRedis();
 
-    builder.AddPostgresDbContext<LeaderBoardReadDbContext>(
-        migrationAssembly: typeof(MigrationRootMetadata).Assembly
-    );
+    builder.AddPostgresDbContext<LeaderBoardReadDbContext>(migrationAssembly: typeof(MigrationRootMetadata).Assembly);
 
     builder.Services.AddScoped<IReadThrough, ReadThrough>();
     builder.Services.AddScoped<IReadProviderDatabase, PostgresReadProviderDatabase>();
 
     var app = builder.Build();
 
-    app.UseExceptionHandler(
-        options: new ExceptionHandlerOptions { AllowStatusCode404Response = true }
-    );
+    app.UseExceptionHandler(options: new ExceptionHandlerOptions { AllowStatusCode404Response = true });
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("test"))
@@ -102,8 +96,7 @@ try
 
     app.UseSerilogRequestLogging();
 
-    var scoreGroup = app.MapGroup("global-board/scores")
-        .WithTags(nameof(PlayerScoreReadModel).Pluralize());
+    var scoreGroup = app.MapGroup("global-board/scores").WithTags(nameof(PlayerScoreReadModel).Pluralize());
     scoreGroup.MapGetRangeScoresAndRanksEndpoint();
     scoreGroup.MapGetGlobalScoreAndRank();
     scoreGroup.MapGetPlayerGroupGlobalScoresAndRanksEndpoints();
@@ -117,8 +110,7 @@ try
 
     using (var scope = app.Services.CreateScope())
     {
-        var leaderBoardDbContext =
-            scope.ServiceProvider.GetRequiredService<LeaderBoardReadDbContext>();
+        var leaderBoardDbContext = scope.ServiceProvider.GetRequiredService<LeaderBoardReadDbContext>();
         await leaderBoardDbContext.Database.MigrateAsync();
     }
 

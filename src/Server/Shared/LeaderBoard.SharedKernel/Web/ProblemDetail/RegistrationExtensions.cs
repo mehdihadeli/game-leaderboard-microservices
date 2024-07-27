@@ -16,9 +16,7 @@ public static class RegistrationExtensions
         params Assembly[] scanAssemblies
     )
     {
-        var assemblies = scanAssemblies.Any()
-            ? scanAssemblies
-            : AppDomain.CurrentDomain.GetAssemblies();
+        var assemblies = scanAssemblies.Any() ? scanAssemblies : AppDomain.CurrentDomain.GetAssemblies();
 
         services.AddProblemDetails(configure);
         services.ReplaceSingleton<IProblemDetailsService, ProblemDetailsService>();
@@ -31,16 +29,12 @@ public static class RegistrationExtensions
 
     private static void RegisterAllMappers(IServiceCollection services, Assembly[] scanAssemblies)
     {
-        services.Scan(
-            scan =>
-                scan.FromAssemblies(scanAssemblies)
-                    .AddClasses(
-                        classes => classes.AssignableTo(typeof(IProblemDetailMapper)),
-                        false
-                    )
-                    .UsingRegistrationStrategy(RegistrationStrategy.Append)
-                    .As<IProblemDetailMapper>()
-                    .WithLifetime(ServiceLifetime.Singleton)
+        services.Scan(scan =>
+            scan.FromAssemblies(scanAssemblies)
+                .AddClasses(classes => classes.AssignableTo(typeof(IProblemDetailMapper)), false)
+                .UsingRegistrationStrategy(RegistrationStrategy.Append)
+                .As<IProblemDetailMapper>()
+                .WithLifetime(ServiceLifetime.Singleton)
         );
     }
 }

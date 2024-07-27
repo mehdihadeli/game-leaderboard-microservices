@@ -88,7 +88,6 @@ public static class TelemetryTags
                     { MessageKey, messageKey }
                 };
 
-
             public static Dictionary<string, object?> ConsumerTags(
                 string serviceName,
                 string topicName,
@@ -105,7 +104,7 @@ public static class TelemetryTags
                     { Service.Name, serviceName },
                     { MessageKey, messageKey },
                     { Partition, partitionName },
-                    { ConsumerGroup, consumerGroup}
+                    { ConsumerGroup, consumerGroup }
                 };
         }
     }

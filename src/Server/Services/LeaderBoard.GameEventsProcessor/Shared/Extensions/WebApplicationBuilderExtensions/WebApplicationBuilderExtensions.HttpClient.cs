@@ -19,14 +19,12 @@ public static partial class WebApplicationBuilderExtensions
     {
         builder.Services.AddValidatedOptions<ReadThroughHttpClientOptions>();
 
-        builder.Services
-            .AddHttpClient<IReadThroughClient, ReadThroughClient>()
+        builder
+            .Services.AddHttpClient<IReadThroughClient, ReadThroughClient>()
             .ConfigureHttpClient(
                 (sp, httpClient) =>
                 {
-                    var httpClientOptions = sp.GetRequiredService<
-                        IOptions<ReadThroughHttpClientOptions>
-                    >().Value;
+                    var httpClientOptions = sp.GetRequiredService<IOptions<ReadThroughHttpClientOptions>>().Value;
                     httpClient.BaseAddress = new Uri(httpClientOptions.BaseAddress);
                     httpClient.Timeout = TimeSpan.FromSeconds(httpClientOptions.Timeout);
                 }
@@ -39,14 +37,12 @@ public static partial class WebApplicationBuilderExtensions
     {
         builder.Services.AddValidatedOptions<WriteThroughHttpClientOptions>();
 
-        builder.Services
-            .AddHttpClient<IWriteThroughClient, WriteThroughClient>()
+        builder
+            .Services.AddHttpClient<IWriteThroughClient, WriteThroughClient>()
             .ConfigureHttpClient(
                 (sp, httpClient) =>
                 {
-                    var httpClientOptions = sp.GetRequiredService<
-                        IOptions<WriteThroughHttpClientOptions>
-                    >().Value;
+                    var httpClientOptions = sp.GetRequiredService<IOptions<WriteThroughHttpClientOptions>>().Value;
                     httpClient.BaseAddress = new Uri(httpClientOptions.BaseAddress);
                     httpClient.Timeout = TimeSpan.FromSeconds(httpClientOptions.Timeout);
                 }

@@ -7,9 +7,7 @@ namespace LeaderBoard.GameEventsProcessor.PlayerScores.Features.GettingRangeScor
 
 public static class GetRangeScoresAndRanksEndpoint
 {
-    internal static RouteHandlerBuilder MapGetRangeScoresAndRanksEndpoint(
-        this IEndpointRouteBuilder routeBuilder
-    )
+    internal static RouteHandlerBuilder MapGetRangeScoresAndRanksEndpoint(this IEndpointRouteBuilder routeBuilder)
     {
         return routeBuilder
             .MapGet("range", Handle)
@@ -20,8 +18,7 @@ public static class GetRangeScoresAndRanksEndpoint
             [AsParameters] GetRangeScoresAndRanksRequestParameter requestParameters
         )
         {
-            var (mediator, cancellationToken, leaderboardName, start, end, isDesc) =
-                requestParameters;
+            var (mediator, cancellationToken, leaderboardName, start, end, isDesc) = requestParameters;
             var res = await mediator.Send(
                 new GetRangeScoresAndRanks(leaderboardName, start, end, isDesc),
                 cancellationToken

@@ -6,8 +6,8 @@ using LeaderBoard.SharedKernel.Bus;
 using LeaderBoard.SharedKernel.Contracts.Data.EventStore;
 using LeaderBoard.SharedKernel.Contracts.Data.EventStore.Projections;
 using LeaderBoard.SharedKernel.Contracts.Domain.Events;
-using StackExchange.Redis;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 
 namespace LeaderBoard.WriteBehind.Shared.Projections;
 
@@ -69,9 +69,7 @@ public class EFCorePlayerScoreReadModelProjection : IReadProjection
         {
             // https://www.thinktecture.com/en/entity-framework-core/use-transactionscope-with-caution-in-2-1/
             // https://github.com/dotnet/efcore/issues/6233#issuecomment-242693262
-            var transaction = await _leaderBoardReadDbContext.Database.BeginTransactionAsync(
-                cancellationToken
-            );
+            var transaction = await _leaderBoardReadDbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
@@ -83,8 +81,7 @@ public class EFCorePlayerScoreReadModelProjection : IReadProjection
                 // if entity not exists, add it to DbContext
                 if (entity is null)
                 {
-                    entity = (PlayerScoreReadModel)
-                        Activator.CreateInstance(typeof(PlayerScoreReadModel), true)!;
+                    entity = (PlayerScoreReadModel)Activator.CreateInstance(typeof(PlayerScoreReadModel), true)!;
 
                     previousScore = 0;
 
@@ -92,9 +89,7 @@ public class EFCorePlayerScoreReadModelProjection : IReadProjection
 
                     updatedScore = entity.Score;
 
-                    await _leaderBoardReadDbContext
-                        .Set<PlayerScoreReadModel>()
-                        .AddAsync(entity, cancellationToken);
+                    await _leaderBoardReadDbContext.Set<PlayerScoreReadModel>().AddAsync(entity, cancellationToken);
                 }
                 else
                 {
@@ -112,9 +107,7 @@ public class EFCorePlayerScoreReadModelProjection : IReadProjection
 
                 entity.LastProcessedPosition = eventLogPosition ?? 0;
 
-                await _leaderBoardReadDbContext
-                    .SaveChangesAsync(cancellationToken)
-                    .ConfigureAwait(false);
+                await _leaderBoardReadDbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
                 var rangeMembersToNotifyTask = _redisDatabase.SortedSetRangeByScoreAsync(
                     entity.LeaderBoardName,
@@ -126,17 +119,12 @@ public class EFCorePlayerScoreReadModelProjection : IReadProjection
 
                 var rangeMembersToNotify = await rangeMembersToNotifyTask;
 
-                var playerIds = rangeMembersToNotify
-                    .Select(x => x.ToString().Split(":")[1])
-                    .ToList();
+                var playerIds = rangeMembersToNotify.Select(x => x.ToString().Split(":")[1]).ToList();
 
                 if (playerIds.Any())
                 {
                     // publish to use in the signalr real-time notification
-                    await _busPublisher.Publish(
-                        new PlayersRankAffected(playerIds),
-                        cancellationToken
-                    );
+                    await _busPublisher.Publish(new PlayersRankAffected(playerIds), cancellationToken);
                 }
 
                 await transaction.CommitAsync(cancellationToken);

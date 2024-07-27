@@ -18,9 +18,7 @@ public static class RegistrationExtensions
         params Assembly[] scanAssemblies
     )
     {
-        var assembliesToScan = scanAssemblies.Any()
-            ? scanAssemblies
-            : new[] { Assembly.GetCallingAssembly(), };
+        var assembliesToScan = scanAssemblies.Any() ? scanAssemblies : new[] { Assembly.GetCallingAssembly(), };
 
         services.AddValidatedOptions<EventStoreDBOptions>();
 
@@ -31,15 +29,10 @@ public static class RegistrationExtensions
             .AddSingleton(sp =>
             {
                 var option = sp.GetRequiredService<IOptions<EventStoreDBOptions>>().Value;
-                return new EventStoreClient(
-                    EventStoreClientSettings.Create(option.GrpcConnectionString)
-                );
+                return new EventStoreClient(EventStoreClientSettings.Create(option.GrpcConnectionString));
             });
 
-        services.AddTransient<
-            ISubscriptionCheckpointRepository,
-            EventStoreDBSubscriptionCheckpointRepository
-        >();
+        services.AddTransient<ISubscriptionCheckpointRepository, EventStoreDBSubscriptionCheckpointRepository>();
 
         services.AddEventStoreDbSubscriptionToAll();
 
@@ -54,10 +47,7 @@ public static class RegistrationExtensions
         services.AddValidatedOptions<EventStoreDBSubscriptionToAllOptions>();
         if (checkpointToEventStoreDb)
         {
-            services.AddTransient<
-                ISubscriptionCheckpointRepository,
-                EventStoreDBSubscriptionCheckpointRepository
-            >();
+            services.AddTransient<ISubscriptionCheckpointRepository, EventStoreDBSubscriptionCheckpointRepository>();
         }
 
         TelemetryPropagator.UseDefaultCompositeTextMapPropagator();

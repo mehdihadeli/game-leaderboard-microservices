@@ -18,10 +18,7 @@ public class EventStoreDbWriteBehindDatabaseProvider : IWriteBehindDatabaseProvi
         _logger = logger;
     }
 
-    public async Task AddOrUpdatePlayerScore(
-        PlayerScoreDto playerScoreDto,
-        CancellationToken cancellationToken
-    )
+    public async Task AddOrUpdatePlayerScore(PlayerScoreDto playerScoreDto, CancellationToken cancellationToken)
     {
         // write to primary database
         var playerScoreAggregate = await _aggregateStore.GetAsync<PlayerScoreAggregate, string>(

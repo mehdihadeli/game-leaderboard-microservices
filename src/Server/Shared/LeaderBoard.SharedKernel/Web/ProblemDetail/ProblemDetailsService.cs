@@ -26,8 +26,7 @@ public class ProblemDetailsService : IProblemDetailsService
         ArgumentNullException.ThrowIfNull((object)context.HttpContext, "context.HttpContext");
 
         // with help of `capture exception middleware` for capturing actual thrown exception, in .net 8 preview 5 it will create automatically
-        IExceptionHandlerFeature? exceptionFeature =
-            context.HttpContext.Features.Get<IExceptionHandlerFeature>();
+        IExceptionHandlerFeature? exceptionFeature = context.HttpContext.Features.Get<IExceptionHandlerFeature>();
 
         // if we throw an exception, we should create appropriate ProblemDetail based on the exception, else we just return default ProblemDetail with status 500 or a custom ProblemDetail which is returned from the endpoint
         if (exceptionFeature is not null)
@@ -70,9 +69,7 @@ public class ProblemDetailsService : IProblemDetailsService
         {
             foreach (var problemDetailMapper in _problemDetailMappers)
             {
-                var mappedStatusCode = problemDetailMapper.GetMappedStatusCodes(
-                    exceptionFeature.Error
-                );
+                var mappedStatusCode = problemDetailMapper.GetMappedStatusCodes(exceptionFeature.Error);
                 if (mappedStatusCode > 0)
                 {
                     PopulateNewProblemDetail(
@@ -97,7 +94,6 @@ public class ProblemDetailsService : IProblemDetailsService
         existingProblemDetails.Title = exception.GetType().Name;
         existingProblemDetails.Detail = exception.Message;
         existingProblemDetails.Status = statusCode;
-        existingProblemDetails.Instance =
-            $"{httpContext.Request.Method} {httpContext.Request.Path}";
+        existingProblemDetails.Instance = $"{httpContext.Request.Method} {httpContext.Request.Path}";
     }
 }

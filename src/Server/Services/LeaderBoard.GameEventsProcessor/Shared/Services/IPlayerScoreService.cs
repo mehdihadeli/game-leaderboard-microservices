@@ -14,25 +14,9 @@ public interface IPlayerScoreService
         bool isDesc = true,
         CancellationToken cancellationToken = default
     );
-    Task<PlayerScoreDto?> GetNextMember(
-        string leaderBoardName,
-        string memberKey,
-        bool isDesc = true
-    );
+    Task<PlayerScoreDto?> GetNextMember(string leaderBoardName, string memberKey, bool isDesc = true);
 
-    Task<PlayerScoreDto?> GetNextMemberByRank(
-        string leaderBoardName,
-        long rank,
-        bool isDesc = true
-    );
-    Task<PlayerScoreDto?> GetPreviousMember(
-        string leaderBoardName,
-        string memberKey,
-        bool isDesc = true
-    );
-    Task<PlayerScoreDto?> GetPreviousMemberByRank(
-        string leaderBoardName,
-        long rank,
-        bool isDesc = true
-    );
+    Task<PlayerScoreDto?> GetNextMemberByRank(string leaderBoardName, long rank, bool isDesc = true);
+    Task<PlayerScoreDto?> GetPreviousMember(string leaderBoardName, string memberKey, bool isDesc = true);
+    Task<PlayerScoreDto?> GetPreviousMemberByRank(string leaderBoardName, long rank, bool isDesc = true);
 }

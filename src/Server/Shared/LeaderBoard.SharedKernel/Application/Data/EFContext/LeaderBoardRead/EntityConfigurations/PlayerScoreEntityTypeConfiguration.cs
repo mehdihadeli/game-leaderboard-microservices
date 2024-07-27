@@ -5,8 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace LeaderBoard.SharedKernel.Application.Data.EFContext.LeaderBoard.EntityConfigurations;
 
-public class PlayerScoreReadModelEntityTypeConfiguration
-    : IEntityTypeConfiguration<PlayerScoreReadModel>
+public class PlayerScoreReadModelEntityTypeConfiguration : IEntityTypeConfiguration<PlayerScoreReadModel>
 {
     public void Configure(EntityTypeBuilder<PlayerScoreReadModel> builder)
     {

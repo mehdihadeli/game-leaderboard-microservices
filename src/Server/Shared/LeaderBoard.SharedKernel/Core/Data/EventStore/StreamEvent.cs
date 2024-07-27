@@ -5,7 +5,7 @@ using LeaderBoard.SharedKernel.Domain.Events;
 namespace LeaderBoard.SharedKernel.Core.Data.EventStore;
 
 public record StreamEvent<T>(T Data, IStreamEventMetadata Metadata) : IStreamEvent<T>
-where T : IDomainEvent
+    where T : IDomainEvent
 {
     object IStreamEvent.Data => Data;
 }

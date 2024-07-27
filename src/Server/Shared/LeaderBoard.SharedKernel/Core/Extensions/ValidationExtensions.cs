@@ -70,10 +70,7 @@ public static class ValidationExtensions
     {
         if (string.IsNullOrWhiteSpace(argument))
         {
-            throw new ArgumentException(
-                $"{argumentName} cannot be null or white space.",
-                argumentName
-            );
+            throw new ArgumentException($"{argumentName} cannot be null or white space.", argumentName);
         }
 
         return argument;
@@ -233,10 +230,7 @@ public static class ValidationExtensions
         var regex = new Regex(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
         if (!regex.IsMatch(email))
         {
-            throw new ArgumentException(
-                $"{argumentName} is not a valid email address.",
-                argumentName
-            );
+            throw new ArgumentException($"{argumentName} is not a valid email address.", argumentName);
         }
 
         return email;
@@ -251,10 +245,7 @@ public static class ValidationExtensions
         var regex = new Regex(@"^[+]?(\d{1,2})?[\s.-]?(\d{3})[\s.-]?(\d{4})[\s.-]?(\d{4})$");
         if (!regex.IsMatch(phoneNumber))
         {
-            throw new ArgumentException(
-                $"{argumentName} is not a valid phone number.",
-                argumentName
-            );
+            throw new ArgumentException($"{argumentName} is not a valid phone number.", argumentName);
         }
 
         return phoneNumber;
@@ -269,10 +260,7 @@ public static class ValidationExtensions
         var regex = new Regex(@"^(?:(?:\+|00)([1-9]{1,3}))?([1-9]\d{9})$");
         if (!regex.IsMatch(mobileNumber))
         {
-            throw new ArgumentException(
-                $"{argumentName} is not a valid mobile number.",
-                argumentName
-            );
+            throw new ArgumentException($"{argumentName} is not a valid mobile number.", argumentName);
         }
 
         return mobileNumber;

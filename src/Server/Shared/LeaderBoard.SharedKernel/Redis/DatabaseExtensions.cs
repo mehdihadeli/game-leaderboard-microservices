@@ -12,10 +12,7 @@ public static class DatabaseExtensions
     {
         var jsonData = JsonConvert.SerializeObject(
             data,
-            new JsonSerializerSettings
-            {
-                ContractResolver = new CamelCasePropertyNamesContractResolver()
-            }
+            new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() }
         );
 
         await database.PublishAsync(channelName, jsonData);
@@ -27,18 +24,11 @@ public static class DatabaseExtensions
         await database.PublishMessage(channelName, data);
     }
 
-    public static async Task PublishMessage<T>(
-        this ITransaction transaction,
-        string channelName,
-        T data
-    )
+    public static async Task PublishMessage<T>(this ITransaction transaction, string channelName, T data)
     {
         var jsonData = JsonConvert.SerializeObject(
             data,
-            new JsonSerializerSettings
-            {
-                ContractResolver = new CamelCasePropertyNamesContractResolver()
-            }
+            new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() }
         );
 
         await transaction.PublishAsync(channelName, jsonData);
@@ -56,9 +46,7 @@ public static class DatabaseExtensions
         Func<string, T, Task> handler
     )
     {
-        var channelMessageQueue = await database.Multiplexer
-            .GetSubscriber()
-            .SubscribeAsync(channelName);
+        var channelMessageQueue = await database.Multiplexer.GetSubscriber().SubscribeAsync(channelName);
 
         channelMessageQueue.OnMessage(async channelMessage =>
         {
@@ -67,15 +55,9 @@ public static class DatabaseExtensions
         });
     }
 
-    public static async Task SubscribeMessage<T>(
-        this IDatabase database,
-        string channelName,
-        Func<T, Task> handler
-    )
+    public static async Task SubscribeMessage<T>(this IDatabase database, string channelName, Func<T, Task> handler)
     {
-        var channelMessageQueue = await database.Multiplexer
-            .GetSubscriber()
-            .SubscribeAsync(channelName);
+        var channelMessageQueue = await database.Multiplexer.GetSubscriber().SubscribeAsync(channelName);
 
         channelMessageQueue.OnMessage(async channelMessage =>
         {
@@ -84,10 +66,7 @@ public static class DatabaseExtensions
         });
     }
 
-    public static async Task SubscribeMessage<T>(
-        this IDatabase database,
-        Func<string, T, Task> handler
-    )
+    public static async Task SubscribeMessage<T>(this IDatabase database, Func<string, T, Task> handler)
     {
         var channelName = $"{typeof(T).Name.Underscore()}_channel";
 

@@ -8,4 +8,4 @@ public record StreamEventMetadata(
     ulong StreamPosition,
     ulong? LogPosition,
     PropagationContext? PropagationContext
-): IStreamEventMetadata;
+) : IStreamEventMetadata;

@@ -28,21 +28,9 @@ public class PlayerScoreAggregate : EventSourcedAggregate<string>
         return playerScore;
     }
 
-    public PlayerScoreAggregate Update(
-        double score,
-        string firstName,
-        string lastName,
-        string country
-    )
+    public PlayerScoreAggregate Update(double score, string firstName, string lastName, string country)
     {
-        var @event = new PlayerScoreUpdated(
-            Id,
-            score,
-            LeaderBoardName,
-            firstName,
-            lastName,
-            country
-        );
+        var @event = new PlayerScoreUpdated(Id, score, LeaderBoardName, firstName, lastName, country);
 
         ApplyEvent(@event);
 

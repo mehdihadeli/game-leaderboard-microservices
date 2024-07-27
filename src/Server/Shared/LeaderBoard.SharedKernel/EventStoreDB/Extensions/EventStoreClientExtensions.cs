@@ -12,7 +12,8 @@ public static class EventStoreClientExtensions
         Func<TEntity> getDefault,
         Func<TEntity, object, TEntity> when,
         string id,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var readResult = eventStore.ReadStreamAsync(
             Direction.Forwards,
@@ -26,17 +27,14 @@ public static class EventStoreClientExtensions
 
         return await readResult
             .Select(@event => @event.Deserialize()!)
-            .AggregateAsync(
-                getDefault(),
-                when,
-                cancellationToken
-            );
+            .AggregateAsync(getDefault(), when, cancellationToken);
     }
 
     public static async Task<List<object>> ReadStream(
         this EventStoreClient eventStore,
         string id,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var readResult = eventStore.ReadStreamAsync(
             Direction.Forwards,
@@ -59,7 +57,6 @@ public static class EventStoreClientExtensions
         object @event,
         CancellationToken cancellationToken
     )
-
     {
         var result = await eventStore.AppendToStreamAsync(
             id,
@@ -69,7 +66,6 @@ public static class EventStoreClientExtensions
         );
         return result.NextExpectedStreamRevision;
     }
-
 
     public static async Task<ulong> Append(
         this EventStoreClient eventStore,

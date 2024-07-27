@@ -7,10 +7,8 @@ namespace LeaderBoard.SharedKernel.OpenTelemetry;
 
 public static class TelemetryExtensions
 {
-    public static IServiceCollection AddOpenTelemetry(
-        this IServiceCollection services,
-        string serviceName
-    ) => AddOpenTelemetry(services, serviceName, OpenTelemetryOptions.Default);
+    public static IServiceCollection AddOpenTelemetry(this IServiceCollection services, string serviceName) =>
+        AddOpenTelemetry(services, serviceName, OpenTelemetryOptions.Default);
 
     public static IServiceCollection AddOpenTelemetry(
         this IServiceCollection services,
@@ -24,18 +22,19 @@ public static class TelemetryExtensions
             .AddOpenTelemetry()
             .WithTracing(builder =>
             {
-                options.ConfigureTracerProvider(builder
-                        .AddSource(ActivitySourceProvider.DefaultSourceName)
-                        .AddAspNetCoreInstrumentation()
-                        .AddHttpClientInstrumentation(o =>
-                        {
-                            o.RecordException = true;
-                        })
-                        .SetResourceBuilder(
-                            ResourceBuilder.CreateDefault()
-                                .AddService(serviceName)
-                                .AddTelemetrySdk()
-                        ))
+                options
+                    .ConfigureTracerProvider(
+                        builder
+                            .AddSource(ActivitySourceProvider.DefaultSourceName)
+                            .AddAspNetCoreInstrumentation()
+                            .AddHttpClientInstrumentation(o =>
+                            {
+                                o.RecordException = true;
+                            })
+                            .SetResourceBuilder(
+                                ResourceBuilder.CreateDefault().AddService(serviceName).AddTelemetrySdk()
+                            )
+                    )
                     .SetSampler(new AlwaysOnSampler());
 
                 if (!options.ShouldDisableConsoleExporter)
@@ -54,12 +53,9 @@ public class OpenTelemetryOptions
 
     public bool ShouldDisableConsoleExporter { get; private set; }
 
-    private OpenTelemetryOptions()
-    {
-    }
+    private OpenTelemetryOptions() { }
 
-    public static OpenTelemetryOptions Build(Func<OpenTelemetryOptions, OpenTelemetryOptions> build) =>
-        build(Default);
+    public static OpenTelemetryOptions Build(Func<OpenTelemetryOptions, OpenTelemetryOptions> build) => build(Default);
 
     public OpenTelemetryOptions Configure(Func<TracerProviderBuilder, TracerProviderBuilder> configure)
     {

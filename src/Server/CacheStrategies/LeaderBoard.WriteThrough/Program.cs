@@ -30,8 +30,8 @@ using Serilog.Exceptions;
 using StackExchange.Redis;
 
 // https://github.com/serilog/serilog-aspnetcore#two-stage-initialization
-Log.Logger = new LoggerConfiguration().MinimumLevel
-    .Override("Microsoft", LogEventLevel.Information)
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
     .Enrich.FromLogContext()
     .Enrich.WithExceptionDetails()
     .WriteTo.Console()
@@ -67,8 +67,8 @@ try
         (context, services, configuration) =>
         {
             //https://github.com/serilog/serilog-aspnetcore#two-stage-initialization
-            configuration.ReadFrom
-                .Configuration(context.Configuration)
+            configuration
+                .ReadFrom.Configuration(context.Configuration)
                 .ReadFrom.Services(services)
                 .Enrich.FromLogContext()
                 .WriteTo.Console();
@@ -83,9 +83,7 @@ try
     builder.Services.AddSwaggerGen();
 
     builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
-    builder.Services.AddMediatR(
-        c => c.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly())
-    );
+    builder.Services.AddMediatR(c => c.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 
     var policy = Policy.Handle<Exception>().RetryAsync(2);
     builder.Services.AddSingleton(ActivityScope.Instance);
@@ -93,19 +91,12 @@ try
 
     builder.Services.AddEventStoreDB(policy, Assembly.GetExecutingAssembly());
 
-    builder.Services.AddTransient<
-        IAggregatesDomainEventsRequestStore,
-        AggregatesDomainEventsStore
-    >();
+    builder.Services.AddTransient<IAggregatesDomainEventsRequestStore, AggregatesDomainEventsStore>();
 
     builder.AddCustomRedis();
 
-    builder.AddPostgresDbContext<LeaderBoardReadDbContext>(
-        migrationAssembly: typeof(MigrationRootMetadata).Assembly
-    );
-    builder.AddPostgresDbContext<InboxOutboxDbContext>(
-        migrationAssembly: typeof(MigrationRootMetadata).Assembly
-    );
+    builder.AddPostgresDbContext<LeaderBoardReadDbContext>(migrationAssembly: typeof(MigrationRootMetadata).Assembly);
+    builder.AddPostgresDbContext<InboxOutboxDbContext>(migrationAssembly: typeof(MigrationRootMetadata).Assembly);
 
     builder.Services.AddScoped<IWriteThrough, WriteThrough>();
     builder.Services.AddScoped<IWriteProviderDatabase, EventStoreWriteProviderDatabase>();
@@ -149,9 +140,7 @@ try
 
     var app = builder.Build();
 
-    app.UseExceptionHandler(
-        options: new ExceptionHandlerOptions { AllowStatusCode404Response = true }
-    );
+    app.UseExceptionHandler(options: new ExceptionHandlerOptions { AllowStatusCode404Response = true });
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("test"))
@@ -171,14 +160,12 @@ try
 
     app.UseHttpsRedirection();
 
-    var scoreGroup = app.MapGroup("global-board/scores")
-        .WithTags(nameof(PlayerScoreReadModel).Pluralize());
+    var scoreGroup = app.MapGroup("global-board/scores").WithTags(nameof(PlayerScoreReadModel).Pluralize());
     scoreGroup.MapAddOrUpdatePlayerScoreEndpoint();
 
     using (var scope = app.Services.CreateScope())
     {
-        var leaderBoardDbContext =
-            scope.ServiceProvider.GetRequiredService<LeaderBoardReadDbContext>();
+        var leaderBoardDbContext = scope.ServiceProvider.GetRequiredService<LeaderBoardReadDbContext>();
         await leaderBoardDbContext.Database.MigrateAsync();
 
         var inboxOutboxDbContext = scope.ServiceProvider.GetRequiredService<InboxOutboxDbContext>();
@@ -218,8 +205,7 @@ try
         {
             using var scope = app.Services.CreateScope();
 
-            var eventstoredbWriteProviderDatabase =
-                scope.ServiceProvider.GetRequiredService<IWriteProviderDatabase>();
+            var eventstoredbWriteProviderDatabase = scope.ServiceProvider.GetRequiredService<IWriteProviderDatabase>();
             // EventStoreDB
             await eventstoredbWriteProviderDatabase.AddOrUpdatePlayerScore(
                 new PlayerScoreDto(
@@ -246,18 +232,12 @@ finally
     Log.CloseAndFlush();
 }
 
-static IServiceCollection AddInternalEventBus(
-    IServiceCollection services,
-    AsyncPolicy? asyncPolicy = null
-)
+static IServiceCollection AddInternalEventBus(IServiceCollection services, AsyncPolicy? asyncPolicy = null)
 {
-    services.AddSingleton(
-        sp =>
-            new InternalEventBus(
-                sp.GetRequiredService<IMediator>(),
-                asyncPolicy ?? Policy.NoOpAsync()
-            )
-    );
+    services.AddSingleton(sp => new InternalEventBus(
+        sp.GetRequiredService<IMediator>(),
+        asyncPolicy ?? Policy.NoOpAsync()
+    ));
     services.TryAddSingleton<IInternalEventBus>(sp => sp.GetRequiredService<InternalEventBus>());
 
     return services;
