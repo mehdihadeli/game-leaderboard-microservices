@@ -51,7 +51,10 @@ try
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
-    builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+    builder.Services.AddAutoMapper(
+        cfg => { },
+        typeof(SignalRRoot).Assembly
+    );
 
     builder.AddCustomHttpClients();
 

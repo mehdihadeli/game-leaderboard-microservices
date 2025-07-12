@@ -13,6 +13,7 @@ using LeaderBoard.SharedKernel.EventStoreDB.Extensions;
 using LeaderBoard.SharedKernel.OpenTelemetry;
 using LeaderBoard.SharedKernel.Postgres;
 using LeaderBoard.SharedKernel.Redis;
+using LeaderBoard.WriteThrough;
 using LeaderBoard.WriteThrough.PlayerScore.Dtos;
 using LeaderBoard.WriteThrough.PlayerScore.Features.AddingOrUpdatingPlayerScore;
 using LeaderBoard.WriteThrough.Shared.Extensions.WebApplicationBuilderExtensions;
@@ -82,7 +83,10 @@ try
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
-    builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+    builder.Services.AddAutoMapper(
+        cfg => { },
+        typeof(WriteThroughRoot).Assembly
+    );
     builder.Services.AddMediatR(c => c.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 
     var policy = Policy.Handle<Exception>().RetryAsync(2);

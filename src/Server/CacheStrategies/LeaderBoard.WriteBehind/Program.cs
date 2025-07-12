@@ -78,7 +78,11 @@ try
 
     builder.Services.AddValidatedOptions<WriteBehindOptions>();
 
-    builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+    builder.Services.AddAutoMapper(
+        cfg => { },
+        typeof(WriteBehindRoot).Assembly
+    );
+
     builder.Services.AddMediatR(c => c.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 
     var policy = Policy.Handle<Exception>().RetryAsync(2);

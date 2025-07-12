@@ -1,6 +1,7 @@
 using System.Reflection;
 using Humanizer;
 using LeaderBoard.DbMigrator;
+using LeaderBoard.GameEventsProcessor;
 using LeaderBoard.GameEventsProcessor.GameEvent.Features.CreatingGameEvent.Events.External;
 using LeaderBoard.GameEventsProcessor.PlayerScores.Features.AddingOrUpdatingPlayerScore;
 using LeaderBoard.GameEventsProcessor.PlayerScores.Features.GettingGlobalScoreAdnRank;
@@ -90,7 +91,11 @@ try
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
-    builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+    builder.Services.AddAutoMapper(
+        cfg => { },
+        typeof(GameEventsProcessorRoot).Assembly
+    );
+
     builder.Services.AddMediatR(c => c.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 
     builder.AddCustomRedis();

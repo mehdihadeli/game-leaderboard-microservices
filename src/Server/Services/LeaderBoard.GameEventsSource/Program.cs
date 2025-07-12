@@ -76,7 +76,10 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddValidatedOptions<GameEventSourceOptions>();
 
-builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+builder.Services.AddAutoMapper(
+    cfg => { },
+    typeof(GameEventsSourceRoot).Assembly
+);
 builder.Services.AddMediatR(c => c.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 
 builder.AddCustomIdentity();

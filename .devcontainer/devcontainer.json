@@ -5,7 +5,7 @@
 // https://dev.to/this-is-learning/set-up-github-codespaces-for-a-net-8-application-5999
 // https://audacioustux.notion.site/Getting-Started-with-Devcontainer-c727dbf9d56f4d6b9b0ef87b3111693f
 {
-  "name": "Game Leaderboard Microservices",
+  "name": "Food Delivery Microservices",
   // use existing dev container templates. More info: https://containers.dev/guide/dockerfile, https://containers.dev/templates
   //"image": "mcr.microsoft.com/devcontainers/dotnet:1-7.0",
   // use a Dockerfile file. More info: https://containers.dev/guide/dockerfile#dockerfile
@@ -22,10 +22,21 @@
     // https://github.com/devcontainers/features/tree/main/src/dotnet#dotnet-cli-dotnet
     "ghcr.io/devcontainers/features/dotnet:2": {
       // this version should be matched with global.json .net version for working vscode IntelliSense correctly
-      "version": "8.0.303",
-      "additionalVersions": "latest, 8.0.303",
-      "aspNetCoreRuntimeVersions": "latest"
+      "version": "9.0.201",
+      "additionalVersions": "latest, 9.0.201",
+      "aspNetCoreRuntimeVersions": "latest, 9.0.3"
     },
+    // https://github.com/Azure-Samples/aks-store-demo/blob/main/.devcontainer/devcontainer.json
+    // "ghcr.io/azure/azure-dev/azd:latest": {},
+    // "ghcr.io/devcontainers/features/azure-cli:1": {
+    //   "version": "latest",
+    //   "extensions": "aks-preview",
+    //   "installBicep": true
+    // },
+    // // https://github.com/devcontainers/features/tree/main/src/kubectl-helm-minikube
+    // "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {},
+    // // https://github.com/devcontainers/features/tree/main/src/terraform
+    // "ghcr.io/devcontainers/features/terraform:1": {},
     // https://github.com/devcontainers/features/tree/main/src/github-cli
     "ghcr.io/devcontainers/features/github-cli:1": {
       "version": "2"
@@ -36,10 +47,6 @@
     },
     // https://github.com/devcontainers/features/tree/main/src/node
     "ghcr.io/devcontainers/features/node:1": {},
-    // // https://github.com/devcontainers/features/tree/main/src/kubectl-helm-minikube
-    // "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {},
-    // // https://github.com/devcontainers/features/tree/main/src/terraform
-    // "ghcr.io/devcontainers/features/terraform:1": {},
     // https://github.com/devcontainers/features/tree/main/src/docker-in-docker
     // https://devopscube.com/run-docker-in-docker/
     "ghcr.io/devcontainers/features/docker-in-docker:2": {
@@ -62,7 +69,7 @@
         "editor.suggest.snippetsPreventQuickSuggestions": false,
         "explorer.autoReveal": true,
         "resmon.show.cpufreq": false,
-        "dotnet.defaultSolution": "leaderboard.sln",
+        "dotnet.defaultSolution": "food-delivery.sln",
         "dotnet.server.startTimeout": 60000,
         "omnisharp.projectLoadTimeout": 60,
         "workbench.colorTheme": "Visual Studio Light",
@@ -73,9 +80,14 @@
         "explorer.confirmDelete": false,
         "terminal.integrated.defaultProfile.windows": "PowerShell",
         "terminal.integrated.defaultProfile.linux": "zsh",
+        "terminal.integrated.profiles.linux": {
+          "zsh": {
+            "path": "zsh",
+            "icon": "terminal-bash"
+          }
+        },
         "powershell.cwd": "~",
         "terminal.external.windowsExec": "%LOCALAPPDATA%\\Microsoft\\WindowsApps\\pwsh.exe",
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
         "[jsonc]": {
           "editor.defaultFormatter": "esbenp.prettier-vscode"
         },
@@ -105,14 +117,18 @@
         "IBM.output-colorizer", // Colorize your output/test logs
         "emmanuelbeziat.vscode-great-icons",
         "esbenp.prettier-vscode",
-        "csharpier.csharpier-vscode",
         "vscode-icons-team.vscode-icons",
-        "redhat.vscode-yaml"
+        "csharpier.csharpier-vscode",
+        "DavidAnson.vscode-markdownlint",
+        "redhat.vscode-yaml",
+        "kennylong.kubernetes-yaml-formatter",
+        "sonarsource.sonarlint-vscode",
+        "ms-vscode.makefile-tools"
       ]
     }
   },
   "hostRequirements": {
-    "cpus": 4,
+    "cpus": 2,
     "memory": "8gb",
     "storage": "32gb"
   },
